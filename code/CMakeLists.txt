@@ -9,7 +9,7 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 
-find_package(Ceres REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
         src/pnp.cpp
@@ -21,7 +21,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         include
 )
 target_link_libraries(${PROJECT_NAME}
-        Ceres::ceres
+        Eigen3::Eigen
 )
 
 include(FetchContent)
