@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(
-        optimization-architecture
+        pnp
         VERSION 0.0.1
         LANGUAGES CXX
 )
@@ -12,7 +12,7 @@ add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 find_package(Ceres REQUIRED)
 
 set(SRC_FILES
-        src/optimizer_handler.cpp
+        src/pnp.cpp
 )
 add_library(${PROJECT_NAME} SHARED
         ${SRC_FILES}
@@ -34,8 +34,7 @@ enable_testing()
 include(GoogleTest)
 
 set(TESTS
-        test_cost_functions
-        test_optimizer_handler
+        test_pnp
 )
 foreach(TEST IN LISTS TESTS)
     add_executable(${TEST} test/${TEST}.cpp)

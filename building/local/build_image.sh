@@ -18,7 +18,7 @@ while getopts ":t:" opt; do
   esac
 done
 
-IMAGE=optimization-architecture
+IMAGE=pnp
 SCRIPT_FOLDER="$(dirname "$(realpath -s "$0")")"
 TAG=${IMAGE}:${TARGET_STAGE}
 
