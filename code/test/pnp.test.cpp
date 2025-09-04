@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "pnp/pnp.hpp"
+
+#include <gtest/gtest.h>
 
 using namespace reprojection_calibration::pnp;
 
@@ -11,7 +11,7 @@ TEST(TestPnpErrorHandling, MismatchedCorrespondence) {
 
     EXPECT_TRUE(std::holds_alternative<PnpStatusCode>(pnp_result));
     PnpStatusCode const pnp_status_code{std::get<PnpStatusCode>(pnp_result)};
-    EXPECT_EQ(PnpStatusCode::MismatchedCorrespondence, pnp_status_code);
+    EXPECT_EQ(pnp_status_code, PnpStatusCode::MismatchedCorrespondence);
 }
 
 TEST(TestPnpErrorHandling, NotEnoughPoints) {
@@ -21,5 +21,5 @@ TEST(TestPnpErrorHandling, NotEnoughPoints) {
 
     EXPECT_TRUE(std::holds_alternative<PnpStatusCode>(pnp_result));
     PnpStatusCode const pnp_status_code{std::get<PnpStatusCode>(pnp_result)};
-    EXPECT_EQ(PnpStatusCode::NotEnoughPoints, pnp_status_code);
+    EXPECT_EQ(pnp_status_code, PnpStatusCode::NotEnoughPoints);
 }
