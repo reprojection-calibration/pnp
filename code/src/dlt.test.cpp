@@ -80,7 +80,10 @@ Eigen::MatrixXd NormalizeColumnWise(Eigen::MatrixXd const& matrix) {
 // NOTE(Jack): The number of pixels and points has to match! However, because Dlt is part of the internal API, and the
 // number of correspondences is already check in the public facing interface, we do not check it again here.
 Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
-    Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA(pixels, points)};
+    auto const normalized_pixels{NormalizeColumnWise(pixels)};
+    auto const normalized_points{NormalizeColumnWise(points)};
+
+    Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA(normalized_pixels, normalized_points)};
 
     Eigen::JacobiSVD<Eigen::MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
@@ -96,9 +99,9 @@ Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& po
 }  // namespace reprojection_calibration::pnp
 
 TEST(TestDlt, XXX) {
-    // Dlt(test_pixels, test_points);
+    Dlt(test_pixels, test_points);
 
-    EXPECT_EQ(1, 1);
+    EXPECT_EQ(1, 2);
 }
 
 TEST(TestInterleaveRowWise, XXX) {
