@@ -12,6 +12,7 @@ add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
+        src/dlt.cpp
         src/pnp.cpp
 )
 add_library(${PROJECT_NAME} SHARED
@@ -34,17 +35,18 @@ enable_testing()
 include(GoogleTest)
 
 set(TESTS
-        test_pnp
+        pnp
 )
 foreach(TEST IN LISTS TESTS)
-    add_executable(${TEST} test/${TEST}.cpp)
-    target_include_directories(${TEST} PRIVATE
+    set(TEST_NAME test_${TEST})
+    add_executable(${TEST_NAME} test/${TEST}.test.cpp)
+    target_include_directories(${TEST_NAME} PRIVATE
             include
     )
-    target_link_libraries(${TEST}
+    target_link_libraries(${TEST_NAME}
             GTest::gtest_main
             ${PROJECT_NAME}
     )
-    gtest_discover_tests(${TEST})
+    gtest_discover_tests(${TEST_NAME})
 endforeach()
 
