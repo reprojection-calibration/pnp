@@ -35,11 +35,12 @@ enable_testing()
 include(GoogleTest)
 
 set(TESTS
-        pnp
+        src/dlt.test.cpp
+        test/pnp.test.cpp
 )
 foreach(TEST IN LISTS TESTS)
-    set(TEST_NAME test_${TEST})
-    add_executable(${TEST_NAME} test/${TEST}.test.cpp)
+    get_filename_component(TEST_NAME ${TEST} NAME)
+    add_executable(${TEST_NAME} ${TEST})
     target_include_directories(${TEST_NAME} PRIVATE
             include
     )
