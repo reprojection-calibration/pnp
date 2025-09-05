@@ -18,7 +18,6 @@ Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& po
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
 
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA(normalized_pixels, normalized_points)};
-
     Eigen::JacobiSVD<Eigen::MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
@@ -27,23 +26,32 @@ Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& po
     P.row(0) = svd.matrixV().col(11).topRows(4);
     P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
     P.row(2) = svd.matrixV().col(11).bottomRows(4);
-    P /= P(2, 3);
 
-    P = tf_pixels.inverse() * P * tf_points;
+    // NOTE(Jack): In MVG Algorithm 7.1 part (iii) they do a denormalization like:
+    //      P = tf_pixels.inverse() * P * tf_points;
+    // If you then project the original points with this P and then .hnormalized() them, you will get the original
+    // test pixel values. However we follow the opencv "findExtrinsicCameraParams2()" which does not denormalize.
 
-    std::cout << "P: " << P << std::endl;
+    // WARN(Jack): Should we check for negative determinant of R like they do in opencv?
+    svd.compute(P.leftCols(3), Eigen::ComputeThinU | Eigen::ComputeThinV);
+    auto const R = svd.matrixU() * svd.matrixV();
+    double const scale{P.leftCols(3).norm() / R.norm()};
+    auto const T{scale * P.rightCols(1)};
 
-    auto const new_pixels = (P * points.rowwise().homogeneous().transpose()).transpose();
+    Eigen::Isometry3d tf;
+    tf.linear() = R;
+    tf.translation() = T;
 
-    std::cout << "P*X: " << new_pixels.rowwise().hnormalized() << std::endl;
-
-    return Eigen::Isometry3d::Identity();
+    return tf;
 }
 
 }  // namespace reprojection_calibration::pnp
 
 TEST(TestDlt, XXX) {
-    Dlt(test_pixels, test_points);
+    Eigen::Isometry3d const tf{Dlt(test_pixels, test_points)};
 
-    EXPECT_EQ(1, 1);
+    EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);
+    EXPECT_NEAR(tf.linear().diagonal().norm(), std::sqrt(3), 1e-3);  // Heuristic given the provided test data
+    EXPECT_TRUE(tf.translation().isApprox(
+        Eigen::Vector3d{5.22379e-05, -2.73534e-05, 0.215797}, 1e-3));  // Heuristic given the provided test data
 }
