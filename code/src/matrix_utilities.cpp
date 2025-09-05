@@ -39,7 +39,6 @@ Eigen::Isometry3d ToIsometry3d(Eigen::MatrixX3d const R, Eigen::Vector3d const T
     tf.translation() = T;
 
     return tf;
-
 }
 
 }  // namespace reprojection_calibration::pnp
