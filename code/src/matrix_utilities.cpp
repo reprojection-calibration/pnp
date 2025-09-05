@@ -1,5 +1,7 @@
 #include "matrix_utilities.hpp"
 
+#include <iostream>
+
 namespace reprojection_calibration::pnp {
 
 Eigen::MatrixXd InterleaveRowWise(Eigen::MatrixXd const& matrix) {
@@ -17,6 +19,28 @@ Eigen::MatrixXd NormalizeColumnWise(Eigen::MatrixXd const& matrix) {
     Eigen::MatrixXd const normalized_matrix{std::sqrt(matrix.cols()) * centered_matrix.array() / mean_magnitude};
 
     return normalized_matrix;
+}
+
+Eigen::MatrixXd NormalizeColumnWise2(Eigen::MatrixXd const& matrix) {
+    Eigen::VectorXd const center{matrix.colwise().mean()};
+    double const mean_magnitude{((matrix.rowwise() - center.transpose())).rowwise().norm().mean()};
+
+    Eigen::Index const n{matrix.cols()};
+    double const scale{std::sqrt(n) / mean_magnitude};
+
+    Eigen::MatrixXd Tf{Eigen::MatrixXd::Identity(n + 1, n + 1)};
+    Tf.topRightCorner(n, 1) = -scale * center;
+    Tf.diagonal().topRows(n) *= scale;
+
+    // TODO(Jack): Make a function that handles the transpose magic, or consider doing these in a different order. Just
+    // be consistent regardless :)
+    Eigen::MatrixXd const normalized_matrix{(Tf * (matrix.rowwise().homogeneous()).transpose()).transpose()};
+
+    // TODO(Jack): We need to decide on a consistent posture for how we accept/treat homogeneous coordinates. At this
+    // point we are only using homogenous coordinates at points in the math where it helps, but we do not store and
+    // matrices directly as homogenous. Here we take only n left cols so we do no return homogenous points from the
+    // previous calculation
+    return normalized_matrix.leftCols(n);
 }
 
 }  // namespace reprojection_calibration::pnp
