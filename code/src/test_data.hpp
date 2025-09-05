@@ -11,11 +11,11 @@ namespace reprojection_calibration::pnp {
 Eigen::MatrixX2d const test_pixels{{360.00, 240.00}, {480.00, 360.00}, {240.00, 120.00},
                                    {480.00, 180.00}, {240.00, 300.00}, {402.86, 197.14}};
 
-// Same test points but taken from a camera rotated 90 degrees around the z-axis
+// Same test_points but taken from a camera rotated 90 degrees around the z-axis
 Eigen::MatrixX2d const test_pixels_90deg_z{{360.00, 240.00}, {240.00, 360.00}, {480.00, 120.00},
                                            {420.00, 360.00}, {300.00, 120.00}, {402.86, 282.86}};
 
-// Same test points as but taken from a camera shifted along the x-axis 2 meters
+// Same test_points as but taken from a camera shifted along the x-axis 2 meters
 Eigen::MatrixX2d const test_pixels_2m_x{{600.00, 240.00}, {720.00, 360.00}, {480.00, 120.00},
                                         {600.00, 180.00}, {360.00, 300.00}, {574.29, 197.14}};
 
