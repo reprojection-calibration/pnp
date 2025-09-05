@@ -43,6 +43,7 @@ set(TESTS
         src/dlt.test.cpp
         src/matrix_utilities.test.cpp
         src/multiple_view_geometry_data_generator.test.cpp
+        src/nonlinear_refinement.test.cpp
         src/pose_utilities.test.cpp
         test/pnp.test.cpp
 )
