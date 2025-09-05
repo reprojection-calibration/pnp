@@ -6,24 +6,22 @@ namespace reprojection_calibration::pnp {
 
 // NOTE(Jack): The number of pixels and points has to match! However, because Dlt is part of the internal API, and the
 // number of correspondences is already check in the public facing interface, we do not check it again here.
+// NOTE(Jack): In MVG Algorithm 7.1 part (iii) they do a denormalization like:
+//      P = tf_pixels.inverse() * P * tf_points;
+// If you then project the original points with this P and then .hnormalized() them, you will get the original
+// test pixel values. However we follow the opencv "findExtrinsicCameraParams2()" which does not denormalize.
 Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
     auto const [normalized_pixels, tf_pixels]{NormalizeColumnWise(pixels)};
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
-
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA(normalized_pixels, normalized_points)};
+
     Eigen::JacobiSVD<Eigen::MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
-
-    // TODO (Jack): There has to be a more expressive way to pack .col(11) into P
     Eigen::Matrix<double, 3, 4> P;
+    // TODO (Jack): There has to be a more expressive way to pack .col(11) into P
     P.row(0) = svd.matrixV().col(11).topRows(4);
     P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
     P.row(2) = svd.matrixV().col(11).bottomRows(4);
-
-    // NOTE(Jack): In MVG Algorithm 7.1 part (iii) they do a denormalization like:
-    //      P = tf_pixels.inverse() * P * tf_points;
-    // If you then project the original points with this P and then .hnormalized() them, you will get the original
-    // test pixel values. However we follow the opencv "findExtrinsicCameraParams2()" which does not denormalize.
 
     // WARN(Jack): Should we check for negative determinant of R like they do in opencv?
     svd.compute(P.leftCols(3), Eigen::ComputeThinU | Eigen::ComputeThinV);
