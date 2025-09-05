@@ -9,9 +9,11 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 
-find_package(Ceres REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
+        src/dlt.cpp
+        src/matrix_utilities.cpp
         src/pnp.cpp
 )
 add_library(${PROJECT_NAME} SHARED
@@ -21,7 +23,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         include
 )
 target_link_libraries(${PROJECT_NAME}
-        Ceres::ceres
+        Eigen3::Eigen
 )
 
 include(FetchContent)
@@ -34,17 +36,20 @@ enable_testing()
 include(GoogleTest)
 
 set(TESTS
-        test_pnp
+        src/dlt.test.cpp
+        src/matrix_utilities.test.cpp
+        test/pnp.test.cpp
 )
 foreach(TEST IN LISTS TESTS)
-    add_executable(${TEST} test/${TEST}.cpp)
-    target_include_directories(${TEST} PRIVATE
+    get_filename_component(TEST_NAME ${TEST} NAME)
+    add_executable(${TEST_NAME} ${TEST})
+    target_include_directories(${TEST_NAME} PRIVATE
             include
     )
-    target_link_libraries(${TEST}
+    target_link_libraries(${TEST_NAME}
             GTest::gtest_main
             ${PROJECT_NAME}
     )
-    gtest_discover_tests(${TEST})
+    gtest_discover_tests(${TEST_NAME})
 endforeach()
 
