@@ -2,7 +2,6 @@
 
 #include <Eigen/Dense>
 #include <variant>
-#include <string>
 
 namespace reprojection_calibration::pnp {
 

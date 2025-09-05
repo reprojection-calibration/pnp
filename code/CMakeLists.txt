@@ -13,6 +13,7 @@ find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
         src/dlt.cpp
+        src/matrix_utilities.cpp
         src/pnp.cpp
 )
 add_library(${PROJECT_NAME} SHARED
@@ -36,6 +37,7 @@ include(GoogleTest)
 
 set(TESTS
         src/dlt.test.cpp
+        src/matrix_utilities.test.cpp
         test/pnp.test.cpp
 )
 foreach(TEST IN LISTS TESTS)
