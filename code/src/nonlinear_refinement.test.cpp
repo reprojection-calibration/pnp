@@ -1,3 +1,4 @@
+#include <ceres/ceres.h>
 #include <gtest/gtest.h>
 
 #include "dlt.hpp"
