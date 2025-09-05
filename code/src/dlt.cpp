@@ -23,11 +23,15 @@ Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& po
     P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
     P.row(2) = svd.matrixV().col(11).bottomRows(4);
 
-    // WARN(Jack): Should we check for negative determinant of R like they do in opencv?
-    svd.compute(P.leftCols(3), Eigen::ComputeThinU | Eigen::ComputeThinV);
-    auto const R = svd.matrixU() * svd.matrixV();
-    double const scale{P.leftCols(3).norm() / R.norm()};
-    auto const T{scale * P.rightCols(1)};
+    Eigen::Matrix3d P_rotation_component{P.leftCols(3)};
+    if (P_rotation_component.determinant() < 0) {
+        P_rotation_component *= -1.0;
+    }
+
+    svd.compute(P_rotation_component, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::Matrix3d const R{svd.matrixU() * svd.matrixV()};
+    double const scale{P_rotation_component.norm() / R.norm()};
+    Eigen::Vector3d const T{scale * P.rightCols(1)};
 
     return ToIsometry3d(R, T);
 }
