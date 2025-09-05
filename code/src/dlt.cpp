@@ -31,11 +31,7 @@ Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& po
     double const scale{P.leftCols(3).norm() / R.norm()};
     auto const T{scale * P.rightCols(1)};
 
-    Eigen::Isometry3d tf;
-    tf.linear() = R;
-    tf.translation() = T;
-
-    return tf;
+    return ToIsometry3d(R, T);
 }
 
 // The 2n x 12 matrix assembled by stacking up the constraints from (MVG Eq. 7.2)

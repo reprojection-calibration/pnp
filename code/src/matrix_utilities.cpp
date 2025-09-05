@@ -33,4 +33,13 @@ std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> NormalizeColumnWise(Eigen::MatrixXd
     return {normalized_matrix.leftCols(n), Tf};
 }
 
+Eigen::Isometry3d ToIsometry3d(Eigen::MatrixX3d const R, Eigen::Vector3d const T) {
+    Eigen::Isometry3d tf;
+    tf.linear() = R;
+    tf.translation() = T;
+
+    return tf;
+
+}
+
 }  // namespace reprojection_calibration::pnp

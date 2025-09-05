@@ -31,4 +31,6 @@ Eigen::MatrixXd InterleaveRowWise(Eigen::MatrixXd const& matrix);
 // not.
 std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> NormalizeColumnWise(Eigen::MatrixXd const& matrix);
 
+Eigen::Isometry3d ToIsometry3d(Eigen::MatrixX3d const R, Eigen::Vector3d const T);
+
 }  // namespace reprojection_calibration::pnp
