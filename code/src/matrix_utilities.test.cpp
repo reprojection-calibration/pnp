@@ -18,21 +18,10 @@ TEST(TestInterleaveRowWise, XXX) {
     EXPECT_TRUE(interleaved_pixels.row(3).isApprox(test_pixels.row(1)));
 }
 
-
 TEST(TestNormalizeColumnWise, XXX) {
     auto const normalized_test_pixels{NormalizeColumnWise(test_pixels)};
     EXPECT_FLOAT_EQ(normalized_test_pixels.rowwise().norm().mean(), std::sqrt(test_pixels.cols()));
 
     auto const normalized_test_points{NormalizeColumnWise(test_points)};
     EXPECT_FLOAT_EQ(normalized_test_points.rowwise().norm().mean(), std::sqrt(test_points.cols()));
-
-    std::cout << normalized_test_points << std::endl;
-
-    auto const normalized_test_pixels2{NormalizeColumnWise2(test_pixels)};
-    EXPECT_FLOAT_EQ(normalized_test_pixels2.rowwise().norm().mean(), std::sqrt(test_pixels.cols()));
-
-    auto const normalized_test_points2{NormalizeColumnWise2(test_points)};
-    EXPECT_FLOAT_EQ(normalized_test_points2.rowwise().norm().mean(), std::sqrt(test_points.cols()));
-
-    std::cout << normalized_test_points2 << std::endl;
 }

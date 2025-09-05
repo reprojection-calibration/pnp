@@ -13,16 +13,6 @@ Eigen::MatrixXd InterleaveRowWise(Eigen::MatrixXd const& matrix) {
 
 Eigen::MatrixXd NormalizeColumnWise(Eigen::MatrixXd const& matrix) {
     Eigen::VectorXd const center{matrix.colwise().mean()};
-    Eigen::MatrixXd const centered_matrix{matrix.rowwise() - center.transpose()};
-
-    double const mean_magnitude{centered_matrix.rowwise().norm().mean()};
-    Eigen::MatrixXd const normalized_matrix{std::sqrt(matrix.cols()) * centered_matrix.array() / mean_magnitude};
-
-    return normalized_matrix;
-}
-
-Eigen::MatrixXd NormalizeColumnWise2(Eigen::MatrixXd const& matrix) {
-    Eigen::VectorXd const center{matrix.colwise().mean()};
     double const mean_magnitude{((matrix.rowwise() - center.transpose())).rowwise().norm().mean()};
 
     Eigen::Index const n{matrix.cols()};

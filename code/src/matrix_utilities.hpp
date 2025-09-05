@@ -26,6 +26,4 @@ Eigen::MatrixXd InterleaveRowWise(Eigen::MatrixXd const& matrix);
 // non-homogeneous point). See MVG 4.4.4 heading "Isotropic Scaling"
 Eigen::MatrixXd NormalizeColumnWise(Eigen::MatrixXd const& matrix);
 
-Eigen::MatrixXd NormalizeColumnWise2(Eigen::MatrixXd const& matrix);
-
 }  // namespace reprojection_calibration::pnp
