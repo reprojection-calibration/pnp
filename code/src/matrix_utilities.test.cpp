@@ -19,9 +19,11 @@ TEST(TestInterleaveRowWise, XXX) {
 }
 
 TEST(TestNormalizeColumnWise, XXX) {
-    auto const normalized_test_pixels{NormalizeColumnWise(test_pixels)};
+    auto const [normalized_test_pixels, tf_pixels]{NormalizeColumnWise(test_pixels)};
     EXPECT_FLOAT_EQ(normalized_test_pixels.rowwise().norm().mean(), std::sqrt(test_pixels.cols()));
+    EXPECT_FLOAT_EQ(tf_pixels.determinant(), 0.00016085755);  // Heuristic test with no theoretical backing
 
-    auto const normalized_test_points{NormalizeColumnWise(test_points)};
+    auto const [normalized_test_points, tf_points]{NormalizeColumnWise(test_points)};
     EXPECT_FLOAT_EQ(normalized_test_points.rowwise().norm().mean(), std::sqrt(test_points.cols()));
+    EXPECT_FLOAT_EQ(tf_points.determinant(), 0.3336733);  // Heuristic test with no theoretical backing
 }

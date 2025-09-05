@@ -11,7 +11,7 @@ Eigen::MatrixXd InterleaveRowWise(Eigen::MatrixXd const& matrix) {
     return interleaved_matrix;
 }
 
-Eigen::MatrixXd NormalizeColumnWise(Eigen::MatrixXd const& matrix) {
+std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> NormalizeColumnWise(Eigen::MatrixXd const& matrix) {
     Eigen::VectorXd const center{matrix.colwise().mean()};
     double const mean_magnitude{((matrix.rowwise() - center.transpose())).rowwise().norm().mean()};
 
@@ -30,7 +30,7 @@ Eigen::MatrixXd NormalizeColumnWise(Eigen::MatrixXd const& matrix) {
     // point we are only using homogenous coordinates at points in the math where it helps, but we do not store and
     // matrices directly as homogenous. Here we take only n left cols so we do no return homogenous points from the
     // previous calculation
-    return normalized_matrix.leftCols(n);
+    return {normalized_matrix.leftCols(n), Tf};
 }
 
 }  // namespace reprojection_calibration::pnp
