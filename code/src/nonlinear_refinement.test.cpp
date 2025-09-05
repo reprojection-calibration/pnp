@@ -1,7 +1,6 @@
-#include <ceres/ceres.h>
+#include <ceres/ceres.h>  // TODO(Jack): Add header ordering to the clang format, this is madness!
 #include <gtest/gtest.h>
 
-#include "dlt.hpp"
 #include "test_data.hpp"
 
 namespace reprojection_calibration::pnp {
