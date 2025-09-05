@@ -38,6 +38,7 @@ include(GoogleTest)
 set(TESTS
         src/dlt.test.cpp
         src/matrix_utilities.test.cpp
+        src/nonlinear_refinement.test.cpp
         test/pnp.test.cpp
 )
 foreach(TEST IN LISTS TESTS)
