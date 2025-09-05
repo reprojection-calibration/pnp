@@ -4,8 +4,6 @@
 
 #include <iostream>
 
-#include "../cmake-build-debug-docker-pnp-development/_deps/googletest-src/googletest/include/gtest/gtest.h"
-
 using namespace reprojection_calibration::pnp;
 
 Eigen::MatrixX2d const test_pixels{{360.00, 240.00}, {480.00, 360.00}, {240.00, 120.00},
@@ -87,11 +85,15 @@ Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& po
 
     Eigen::JacobiSVD<Eigen::MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
-    std::cout << "Its singular values are:" << std::endl << svd.singularValues() << std::endl;
-    std::cout << "Its left singular vectors are the columns of the thin U matrix:" << std::endl
-              << svd.matrixU() << std::endl;
-    std::cout << "Its right singular vectors are the columns of the thin V matrix:" << std::endl
-              << svd.matrixV() << std::endl;
+
+    // TODO (Jack): There has to be a more expressive way to pack .col(11) into P
+    Eigen::Matrix<double, 3, 4> P;
+    P.row(0) = svd.matrixV().col(11).topRows(4);
+    P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
+    P.row(2) = svd.matrixV().col(11).bottomRows(4);
+    P /= P(2, 3);
+
+    std::cout << "P: " << P << std::endl;
 
     return Eigen::Isometry3d::Identity();
 }
