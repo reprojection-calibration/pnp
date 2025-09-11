@@ -6,7 +6,7 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(TestDlt, XXX) {
+TEST(Dlt, TestOne) {
     Eigen::Isometry3d const tf{Dlt(test_pixels, test_points)};
 
     EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);
@@ -15,7 +15,7 @@ TEST(TestDlt, XXX) {
                                           1e-3));  // Heuristic given the provided test data
 }
 
-TEST(TestDlt, YYY) {
+TEST(Dlt, TestTwo) {
     Eigen::Isometry3d const tf{Dlt(test_pixels_90deg_z, test_points)};
 
     EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);
@@ -25,7 +25,7 @@ TEST(TestDlt, YYY) {
     EXPECT_TRUE(tf.translation().isApprox(Eigen::Vector3d{5.22379e-05, -2.73534e-05, -0.215797}, 1e-3));
 }
 
-TEST(TestDlt, GGG) {
+TEST(Dlt, TestThree) {
     Eigen::Isometry3d const tf{Dlt(test_pixels_2m_x, test_points)};
 
     EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);
