@@ -15,6 +15,7 @@ set(SRC_FILES
         src/dlt.cpp
         src/matrix_utilities.cpp
         src/pnp.cpp
+        src/pose_utilities.cpp
 )
 add_library(${PROJECT_NAME} SHARED
         ${SRC_FILES}
@@ -39,6 +40,7 @@ set(TESTS
         src/dlt.test.cpp
         src/matrix_utilities.test.cpp
         src/multiple_view_geometry_data_generator.test.cpp
+        src/pose_utilities.test.cpp
         test/pnp.test.cpp
 )
 foreach(TEST IN LISTS TESTS)
