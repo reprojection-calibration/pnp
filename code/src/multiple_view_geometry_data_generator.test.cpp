@@ -34,6 +34,9 @@ MvgFrameGenerator::MvgFrameGenerator(Eigen::MatrixX3d const& points, Eigen::Matr
 
 MvgFrame MvgFrameGenerator::Generate() const {
     // Generate pose
+    // TODO(Jack): This section currently "adapts" to the input pointcloud by centering on it and scaling the viewing
+    // distance according to the mean norm of the points. This is ok but will not handle all cases! This should be
+    // formalized and make it clear to the user what is acceptable and what is not.
     Eigen::Vector3d camera_position{Eigen::Vector3d::Random()};
     camera_position.normalize();
     double const sphere_radius{2 * points_.rowwise().norm().mean()};  // Arbitrary choice to multiply by the scalar
@@ -50,13 +53,11 @@ MvgFrame MvgFrameGenerator::Generate() const {
     viewing_pose << camera_direction, camera_position;
 
     // Project points
-    Eigen::Isometry3d const tf_co_w{FromSe3(viewing_pose).inverse()}; // There is an inverse here!!!
+    Eigen::Isometry3d const tf_co_w{FromSe3(viewing_pose).inverse()};  // There is an inverse here!!!
     Eigen::MatrixX2d const pixels{MvgFrameGenerator::Project(points_, K_, tf_co_w)};
-    std::cout << pixels << std::endl;
 
-    // Construct return value
-
-    return MvgFrame{};
+    // TODO(Jack): This viewing pose might be the inverse of the one we actually expect!
+    return MvgFrame{viewing_pose, pixels, points_};
 }
 
 Eigen::Vector3d MvgFrameGenerator::TrackPoint(Eigen::Vector3d const& origin, Eigen::Vector3d const& camera_position) {
@@ -94,18 +95,10 @@ using namespace reprojection_calibration::pnp;
 TEST(HHH, TestMvgFrameGenerator) {
     Eigen::MatrixX3d const test_points{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
                                        {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
-
     Eigen::Matrix3d const K{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
 
-    auto const gen{MvgFrameGenerator(test_points, K)};
-    auto const frame_i{gen.Generate()};
-
-
-
-
-
-
-    EXPECT_EQ(1, 2);
+    MvgFrameGenerator const test_data_generator{MvgFrameGenerator(test_points, K)};
+    EXPECT_NO_THROW(test_data_generator.Generate());
 }
 
 TEST(HHH, TestTrackPoint) {
