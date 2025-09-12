@@ -4,23 +4,17 @@
 
 namespace reprojection_calibration::pnp {
 
-MvgFrameGenerator::MvgFrameGenerator(Eigen::MatrixX3d const& points, Eigen::Matrix3d const& K)
-    : points_{points}, K_{K} {}
+MvgFrameGenerator::MvgFrameGenerator()
+    : points_{Eigen::MatrixX3d::Random(6, 3)}, K_{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}} {}
 
 MvgFrame MvgFrameGenerator::Generate() const {
     // Generate pose
-    // TODO(Jack): This section currently "adapts" to the input pointcloud by centering on it and scaling the viewing
-    // distance according to the mean norm of the points. This is ok but will not handle all cases! This should be
-    // formalized and make it clear to the user what is acceptable and what is not.
     Eigen::Vector3d camera_position{Eigen::Vector3d::Random()};
     camera_position.normalize();
-    double const sphere_radius{2 * points_.rowwise().norm().mean()};  // Arbitrary choice to multiply by the scalar
+    double const sphere_radius{3.5}; // Picked so that the points fill up as much of the image as possible
     camera_position *= sphere_radius;
-    camera_position += points_.colwise().mean();  // Camera position should be centered on pointcloud center
 
-    // Because the points can be arbitrarily set via the constructor we need to set the position being viewed
-    // dynamically based on the pointclouds centroid.
-    Eigen::Vector3d const origin{points_.colwise().mean()};
+    Eigen::Vector3d const origin{0, 0, 0};
     Eigen::Vector3d const camera_direction{TrackPoint(origin, camera_position)};
 
     // TODO(Jack): Can we construct this directly or do we need to use << - this is done in more than one place.

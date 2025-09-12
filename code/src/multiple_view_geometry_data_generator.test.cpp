@@ -7,11 +7,9 @@
 using namespace reprojection_calibration::pnp;
 
 TEST(MultipleViewGeometryDataGenerator, TestMvgFrameGenerator) {
-    Eigen::MatrixX3d const test_points{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
-                                       {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
-    Eigen::Matrix3d const K{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
 
-    MvgFrameGenerator const test_data_generator{MvgFrameGenerator(test_points, K)};
+
+    MvgFrameGenerator const test_data_generator{MvgFrameGenerator()};
     EXPECT_NO_THROW(test_data_generator.Generate());
 }
 

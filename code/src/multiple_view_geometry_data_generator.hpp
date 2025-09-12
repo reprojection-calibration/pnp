@@ -15,7 +15,7 @@ struct MvgFrame {
 
 class MvgFrameGenerator {
    public:
-    MvgFrameGenerator(Eigen::MatrixX3d const& points, Eigen::Matrix3d const& K);
+    MvgFrameGenerator();
 
     MvgFrame Generate() const;
 
