@@ -14,6 +14,7 @@ TEST(MultipleViewGeometryDataGenerator, TestMvgFrameGenerator) {
 }
 
 TEST(MultipleViewGeometryDataGenerator, TestTrackPoint) {
+    // 3D coordinate viewer: https://dugas.ch/transform_viewer/index.html
     Eigen::Vector3d tracking_direction{MvgFrameGenerator::TrackPoint({0, 0, 0}, {2, 0, 0})};
     EXPECT_TRUE(tracking_direction.isApprox(Eigen::Vector3d{0, -EIGEN_PI / 2.0, 0}));
 
