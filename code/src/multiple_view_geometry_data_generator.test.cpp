@@ -17,15 +17,71 @@ class MvgFrameGenerator {
    public:
     MvgFrameGenerator(Eigen::MatrixX3d const& points, Eigen::Matrix3d const& K);
 
-    MvgFrame Generate();
+    MvgFrame Generate() const;
+
+    static Eigen::MatrixX2d Project(Eigen::MatrixX3d const& points, Eigen::Matrix3d const& K) = delete;
+
+    static Eigen::Vector3d TrackPoint(Eigen::Vector3d const& point, Eigen::Vector3d const& position);
 
    private:
     Eigen::MatrixX3d points_;
     Eigen::Matrix3d K_;
 };
 
+MvgFrameGenerator::MvgFrameGenerator(Eigen::MatrixX3d const& points, Eigen::Matrix3d const& K)
+    : points_{points}, K_{K} {}
+
+MvgFrame MvgFrameGenerator::Generate() const {
+    // generate pose
+
+    // project points
+
+    // construct return value
+
+    return MvgFrame{};
+}
+
+Eigen::Vector3d MvgFrameGenerator::TrackPoint(Eigen::Vector3d const& origin, Eigen::Vector3d const& camera_position) {
+    // WARN(Jack): In testing this function I found that when the x and y coordinates of the origin and camera_position
+    // are the same, i.e. the points  are aligned along the z-plane, the algorithm returns nans. There is probably a
+    // simple test we can use to check this condition to avoid the nans, but for now we will just take this risk and
+    // hope that we never have the same x and y coordinates for both camera and origin. This current implementation also
+    // does not explicitly handle the case where the two points are the same, I assume that takes some error handling to
+    // prevent nans as well.
+    Eigen::Vector3d const origin_direction{(origin - camera_position).normalized()};
+    Eigen::Vector3d const camera_forward_direction{0, 0, 1};
+
+    double const angle{std::acos(origin_direction.transpose() * camera_forward_direction)};
+    Eigen::Vector3d const cross_product{camera_forward_direction.cross(origin_direction)};
+    Eigen::Vector3d const axis{cross_product / cross_product.norm()};
+    Eigen::Vector3d const tracking_direction{angle * axis};
+
+    return tracking_direction;
+}
+
 }  // namespace reprojection_calibration::pnp
 
 using namespace reprojection_calibration::pnp;
 
-TEST(HHH, HHH) { EXPECT_EQ(1, 2); }
+TEST(HHH, TestTrackPoint) {
+    Eigen::Vector3d tracking_direction{MvgFrameGenerator::TrackPoint({0, 0, 0}, {2, 0, 0})};
+    EXPECT_TRUE(tracking_direction.isApprox(Eigen::Vector3d{0, -EIGEN_PI / 2.0, 0}));
+
+    tracking_direction = MvgFrameGenerator::TrackPoint({0, 0, 0}, {0, 2, 0});
+    EXPECT_TRUE(tracking_direction.isApprox(Eigen::Vector3d{EIGEN_PI / 2.0, 0, 0}));
+
+    tracking_direction = MvgFrameGenerator::TrackPoint({0, 0, 0}, {2, 2, 2});
+    EXPECT_TRUE(tracking_direction.isApprox(Eigen::Vector3d{1.54593, -1.54593, 0}, 1e-4));  // Heuristic
+}
+
+TEST(HHH, TestMvgFrameGenerator) {
+    Eigen::MatrixX3d const test_points{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
+                                       {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
+
+    Eigen::Matrix3d const K{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
+
+    auto const gen{MvgFrameGenerator(test_points, K)};
+    auto const frame_i{gen.Generate()};
+
+    EXPECT_EQ(1, 2);
+}
