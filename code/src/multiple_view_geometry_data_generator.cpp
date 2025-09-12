@@ -11,7 +11,7 @@ MvgFrame MvgFrameGenerator::Generate() const {
     // Generate pose
     Eigen::Vector3d camera_position{Eigen::Vector3d::Random()};
     camera_position.normalize();
-    double const sphere_radius{3.5}; // Picked so that the points fill up as much of the image as possible
+    double const sphere_radius{3.5};  // Picked so that the points fill up as much of the image as possible
     camera_position *= sphere_radius;
 
     Eigen::Vector3d const origin{0, 0, 0};
@@ -51,6 +51,8 @@ Eigen::Vector3d MvgFrameGenerator::TrackPoint(Eigen::Vector3d const& origin, Eig
 
 Eigen::MatrixX2d MvgFrameGenerator::Project(Eigen::MatrixX3d const& points_w, Eigen::Matrix3d const& K,
                                             Eigen::Isometry3d const& tf_co_w) {
+    // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not match our
+    // expectations about matrix dimensions after the fact.
     Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
     Eigen::MatrixX2d const pixels{(K * points_homog_co.leftCols(3).transpose()).transpose().rowwise().hnormalized()};
 
