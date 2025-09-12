@@ -19,9 +19,9 @@ class MvgFrameGenerator {
 
     MvgFrame Generate() const;
 
-    static Eigen::MatrixX2d Project(Eigen::MatrixX3d const& points, Eigen::Matrix3d const& K) = delete;
-
     static Eigen::Vector3d TrackPoint(Eigen::Vector3d const& point, Eigen::Vector3d const& position);
+
+    static Eigen::MatrixX2d Project(Eigen::MatrixX4d const& points, Eigen::Matrix3d const& K);
 
    private:
     Eigen::MatrixX3d points_;  // TODO(Jack): Should we add the w postfix to specify the coordinate frame?
@@ -35,9 +35,9 @@ MvgFrame MvgFrameGenerator::Generate() const {
     // Generate pose
     Eigen::Vector3d camera_position{Eigen::Vector3d::Random()};
     camera_position.normalize();
-    double const sphere_radius{10};  // Arbitrary choice for the camera distance from the origin - we should also set
-                                     // this from the input pointcloud like we do the origin
+    double const sphere_radius{10 * points_.rowwise().norm().mean()};  // Arbitrary choice to multiply by the scalar
     camera_position *= sphere_radius;
+    camera_position += points_.colwise().mean();  // Camera position should be centered on pointcloud center
 
     // Because the points can be arbitrarily set via the constructor we need to set the position being viewed
     // dynamically based on the pointclouds centroid.
@@ -51,7 +51,7 @@ MvgFrame MvgFrameGenerator::Generate() const {
     // Project points
     Eigen::Isometry3d const tf_co_w{FromSe3(viewing_pose)};
     Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_.rowwise().homogeneous().transpose()).transpose()};
-
+    // TODO: use static method!!!!
     Eigen::MatrixX2d const pixels{(K_ * points_homog_co.leftCols(3).transpose()).transpose().rowwise().hnormalized()};
     std::cout << pixels << std::endl;
 
@@ -80,6 +80,12 @@ Eigen::Vector3d MvgFrameGenerator::TrackPoint(Eigen::Vector3d const& origin, Eig
     return tracking_direction;
 }
 
+Eigen::MatrixX2d MvgFrameGenerator::Project(Eigen::MatrixX4d const& points, Eigen::Matrix3d const& K) {
+    Eigen::MatrixX2d const pixels{(K * points.leftCols(3).transpose()).transpose().rowwise().hnormalized()};
+
+    return pixels;
+}
+
 }  // namespace reprojection_calibration::pnp
 
 using namespace reprojection_calibration::pnp;
@@ -92,6 +98,8 @@ TEST(HHH, TestMvgFrameGenerator) {
 
     auto const gen{MvgFrameGenerator(test_points, K)};
     auto const frame_i{gen.Generate()};
+    auto const frame_j{gen.Generate()};
+    auto const frame_k{gen.Generate()};
 
     EXPECT_EQ(1, 2);
 }
@@ -105,4 +113,18 @@ TEST(HHH, TestTrackPoint) {
 
     tracking_direction = MvgFrameGenerator::TrackPoint({0, 0, 0}, {2, 2, 2});
     EXPECT_TRUE(tracking_direction.isApprox(Eigen::Vector3d{1.54593, -1.54593, 0}, 1e-4));  // Heuristic
+}
+
+TEST(HHH, TestProject) {
+    Eigen::MatrixX3d const points_w{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
+                                    {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
+    Eigen::Matrix3d const K{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
+
+    Eigen::Isometry3d const tf_co_w{Eigen::Isometry3d::Identity()};
+    Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
+    Eigen::MatrixX2d const pixels{MvgFrameGenerator::Project(points_homog_co, K)};
+    std::cout << pixels << std::endl;
+    Eigen::MatrixX2d const test_pixels{{360.00, 240.00}, {480.00, 360.00}, {240.00, 120.00},
+                                       {480.00, 180.00}, {240.00, 300.00}, {402.857, 197.144}};
+    ASSERT_TRUE(pixels.isApprox(test_pixels, 1e-3));
 }
