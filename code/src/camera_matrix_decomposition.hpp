@@ -15,6 +15,8 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> RqDecomposition(Eigen::Matrix3d con
 std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d const& M);
 
 // NOTE(Jack): MVG section "6.2.4 Finding the camera center"
-Eigen::Vector4d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P);
+// We automatically return the non-homogenous value, maybe there is a reason to return it as a homogeneous point but I
+// do not see it just yet.
+Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P);
 
 }  // namespace reprojection_calibration::pnp
