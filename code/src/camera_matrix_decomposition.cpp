@@ -32,7 +32,18 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
     Eigen::Matrix3d const K_star{K * sign_mat};
     Eigen::Matrix3d const R_star{sign_mat * R};
 
+    // WARN(Jack): Do we need to check the determinant of R and multiply by -1 if we do not like it?
+
     return {K_star, R_star};
+}
+
+Eigen::Vector4d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
+    double const x{P(Eigen::all, {1, 2, 3}).determinant()};
+    double const y{-P(Eigen::all, {0, 2, 3}).determinant()};
+    double const z{P(Eigen::all, {0, 1, 3}).determinant()};
+    double const t{-P(Eigen::all, {0, 1, 2}).determinant()};
+
+    return Eigen::Vector4d{x, y, z, t} / t;
 }
 
 }  // namespace reprojection_calibration::pnp

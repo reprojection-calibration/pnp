@@ -1,7 +1,7 @@
 #pragma once
 
-#include <tuple>
 #include <Eigen/Dense>
+#include <tuple>
 
 namespace reprojection_calibration::pnp {
 
@@ -13,5 +13,8 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> RqDecomposition(Eigen::Matrix3d con
 // matrix P as M.
 // Adopted from https://ksimek.github.io/2012/08/14/decompose/
 std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d const& M);
+
+// NOTE(Jack): MVG section "6.2.4 Finding the camera center"
+Eigen::Vector4d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P);
 
 }  // namespace reprojection_calibration::pnp
