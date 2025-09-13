@@ -32,7 +32,9 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
     Eigen::Matrix3d const K_star{K * sign_mat};
     Eigen::Matrix3d const R_star{sign_mat * R};
 
-    // WARN(Jack): Do we need to check the determinant of R and multiply by -1 if we do not like it?
+    if (R_star.determinant() < 0) {
+        return {K_star, -1.0 * R_star};
+    }
 
     return {K_star, R_star};
 }
