@@ -22,12 +22,13 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt(Eigen::MatrixX2d const& pixel
     P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
     P.row(2) = svd.matrixV().col(11).bottomRows(4);
 
+    // Denormalize camera matrix
     P = tf_pixels.inverse() * P * tf_points;
 
     // NOTE(Jack): We know the K matrix ahead of time, at least that is then assumption the opencv pnp implementation
     // makes, therefore the question is; Can we somehow use that knowledge to make our DLT better, and eliminate that we
     // solve for K here? Or should we just follow the law of useful return and return T and K? For now we will do the
-    // latter but lets keep our eyes peeled for possible simplifications.
+    // latter but let's keep our eyes peeled for possible simplifications.
     auto [K, R]{DecomposeMIntoKr(P.leftCols(3))};
     Eigen::Vector4d const C{CalculateCameraCenter(P)};
 
