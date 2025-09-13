@@ -14,30 +14,18 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt(Eigen::MatrixX2d const& pixel
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA(normalized_pixels, normalized_points)};
 
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd;
-    svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
-    Eigen::Matrix<double, 3, 4> P;
-    // TODO (Jack): There has to be a more expressive way to pack .col(11) into P
-    P.row(0) = svd.matrixV().col(11).topRows(4);
-    P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
-    P.row(2) = svd.matrixV().col(11).bottomRows(4);
-
-    // Denormalize camera matrix
-    P = tf_pixels.inverse() * P * tf_points;
+    Eigen::Matrix<double, 3, 4> const P{SolveForP(A)};
+    // Denormalize - MVG Algorithm 7.1 step (iii)
+    Eigen::Matrix<double, 3, 4> const P_star{tf_pixels.inverse() * P * tf_points};
 
     // NOTE(Jack): We know the K matrix ahead of time, at least that is then assumption the opencv pnp implementation
     // makes, therefore the question is; Can we somehow use that knowledge to make our DLT better, and eliminate that we
     // solve for K here? Or should we just follow the law of useful return and return T and K? For now we will do the
     // latter but let's keep our eyes peeled for possible simplifications.
-    auto [K, R]{DecomposeMIntoKr(P.leftCols(3))};
-    Eigen::Vector4d const C{CalculateCameraCenter(P)};
+    auto [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
+    Eigen::Vector3d const C{CalculateCameraCenter(P_star)};
 
-    // TODO(Jack): Do these normalizations in the subsidary functions above where the values are originally computed,
-    // unless there is some benefit to returning the raw values.
-    K = K.array() / K(2, 2);
-    Eigen::Vector3d const t{C.topRows(3) / C(3)};
-
-    return {ToIsometry3d(R, t), K};
+    return {ToIsometry3d(R, C), K};
 }
 
 // The 2n x 12 matrix assembled by stacking up the constraints from (MVG Eq. 7.2)
@@ -67,6 +55,19 @@ Eigen::Matrix<double, Eigen::Dynamic, 12> ConstructA(Eigen::MatrixX2d const& pix
     }
 
     return A;
+}
+
+Eigen::Matrix<double, 3, 4> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 12> const& A) {
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd;
+    svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+    // TODO (Jack): There has to be a more expressive way to pack .col(11) into Pu
+    Eigen::Matrix<double, 3, 4> P;
+    P.row(0) = svd.matrixV().col(11).topRows(4);
+    P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
+    P.row(2) = svd.matrixV().col(11).bottomRows(4);
+
+    return P;
 }
 
 }  // namespace reprojection_calibration::pnp
