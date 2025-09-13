@@ -6,7 +6,7 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(TestInterleaveRowWise, XXX) {
+TEST(MatrixUtilities, TestInterleaveRowWise) {
     Eigen::MatrixX2d const interleaved_pixels{InterleaveRowWise(test_pixels)};
 
     EXPECT_EQ(interleaved_pixels.rows(), 12);
@@ -18,7 +18,7 @@ TEST(TestInterleaveRowWise, XXX) {
     EXPECT_TRUE(interleaved_pixels.row(3).isApprox(test_pixels.row(1)));
 }
 
-TEST(TestNormalizeColumnWise, XXX) {
+TEST(MatrixUtilities, TestNormalizeColumnWise) {
     auto const [normalized_test_pixels, tf_pixels]{NormalizeColumnWise(test_pixels)};
     EXPECT_FLOAT_EQ(normalized_test_pixels.rowwise().norm().mean(), std::sqrt(test_pixels.cols()));
     EXPECT_FLOAT_EQ(tf_pixels.determinant(), 0.00016085755);  // Heuristic test with no theoretical backing

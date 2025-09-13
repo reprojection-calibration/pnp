@@ -12,9 +12,12 @@ add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
+        src/camera_matrix_decomposition.cpp
         src/dlt.cpp
         src/matrix_utilities.cpp
+        src/multiple_view_geometry_data_generator.cpp
         src/pnp.cpp
+        src/pose_utilities.cpp
 )
 add_library(${PROJECT_NAME} SHARED
         ${SRC_FILES}
@@ -36,8 +39,11 @@ enable_testing()
 include(GoogleTest)
 
 set(TESTS
+        src/camera_matrix_decomposition.test.cpp
         src/dlt.test.cpp
         src/matrix_utilities.test.cpp
+        src/multiple_view_geometry_data_generator.test.cpp
+        src/pose_utilities.test.cpp
         test/pnp.test.cpp
 )
 foreach(TEST IN LISTS TESTS)
