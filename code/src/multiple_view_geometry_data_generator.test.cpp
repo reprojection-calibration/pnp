@@ -7,8 +7,6 @@
 using namespace reprojection_calibration::pnp;
 
 TEST(MultipleViewGeometryDataGenerator, TestMvgFrameGenerator) {
-
-
     MvgFrameGenerator const test_data_generator{MvgFrameGenerator()};
     EXPECT_NO_THROW(test_data_generator.Generate());
 }
