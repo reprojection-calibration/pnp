@@ -4,6 +4,9 @@
 
 #include "multiple_view_geometry_data_generator.hpp"
 
+// TODO(Jack): I think we could add a test where we check more properties, like for example PC=0, etc. Even though these
+// might already be checked in some sub-tests for specific test data, we should be able to do it for all executions.
+
 using namespace reprojection_calibration::pnp;
 
 TEST(Dlt, TestOne) {
