@@ -24,12 +24,14 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> RqDecomposition(Eigen::Matrix3d con
 std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d const& M) {
     const auto [K, R]{RqDecomposition(M)};
 
-    // TODO(Jack): Fix hacky sign names here
+    // TODO(Jack): Fix hacky sign names here - what we are doing here is to make sure that the matrix K has all positive
+    // diagonal values. See the referenced link for more details.
     Eigen::Vector3d const signage{K.diagonal().array().sign()};
     Eigen::Matrix3d sign_mat{Eigen::Matrix3d::Identity()};
     sign_mat.diagonal() = signage;
 
-    Eigen::Matrix3d const K_star{K * sign_mat};
+    Eigen::Matrix3d K_star{K * sign_mat};
+    K_star = K_star.array() / K_star(2, 2);
     Eigen::Matrix3d const R_star{sign_mat * R};
 
     if (R_star.determinant() < 0) {
@@ -39,13 +41,13 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
     return {K_star, R_star};
 }
 
-Eigen::Vector4d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
+Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
     double const x{P(Eigen::all, {1, 2, 3}).determinant()};
     double const y{-P(Eigen::all, {0, 2, 3}).determinant()};
     double const z{P(Eigen::all, {0, 1, 3}).determinant()};
     double const t{-P(Eigen::all, {0, 1, 2}).determinant()};
 
-    return Eigen::Vector4d{x, y, z, t} / t;
+    return Eigen::Vector3d{x, y, z} / t;
 }
 
 }  // namespace reprojection_calibration::pnp
