@@ -1,16 +1,15 @@
 #include "dlt.hpp"
 
+#include "camera_matrix_decomposition.hpp"
 #include "matrix_utilities.hpp"
 
 namespace reprojection_calibration::pnp {
 
 // NOTE(Jack): The number of pixels and points has to match! However, because Dlt is part of the internal API, and the
 // number of correspondences is already check in the public facing interface, we do not check it again here.
-// NOTE(Jack): In MVG Algorithm 7.1 part (iii) they do a denormalization like:
-//      P = tf_pixels.inverse() * P * tf_points;
-// If you then project the original points with this P and then .hnormalized() them, you will get the original
-// test pixel values. However we follow the opencv "findExtrinsicCameraParams2()" which does not denormalize.
-Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
+// NOTE(Jack): We probably mainly want only the pose, but we calculate K anyway as part of the process, so following the
+// "law of useful return", we return K too.
+std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
     auto const [normalized_pixels, tf_pixels]{NormalizeColumnWise(pixels)};
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA(normalized_pixels, normalized_points)};
@@ -23,17 +22,21 @@ Eigen::Isometry3d Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& po
     P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
     P.row(2) = svd.matrixV().col(11).bottomRows(4);
 
-    Eigen::Matrix3d P_rotation_component{P.leftCols(3)};
-    if (P_rotation_component.determinant() < 0) {
-        P_rotation_component *= -1.0;
-    }
+    P = tf_pixels.inverse() * P * tf_points;
 
-    svd.compute(P_rotation_component, Eigen::ComputeThinU | Eigen::ComputeThinV);
-    Eigen::Matrix3d const R{svd.matrixU() * svd.matrixV()};
-    double const scale{P_rotation_component.norm() / R.norm()};
-    Eigen::Vector3d const T{scale * P.rightCols(1)};
+    // NOTE(Jack): We know the K matrix ahead of time, at least that is then assumption the opencv pnp implementation
+    // makes, therefore the question is; Can we somehow use that knowledge to make our DLT better, and eliminate that we
+    // solve for K here? Or should we just follow the law of useful return and return T and K? For now we will do the
+    // latter but lets keep our eyes peeled for possible simplifications.
+    auto [K, R]{DecomposeMIntoKr(P.leftCols(3))};
+    Eigen::Vector4d const C{CalculateCameraCenter(P)};
 
-    return ToIsometry3d(R, T);
+    // TODO(Jack): Do these normalizations in the subsidary functions above where the values are originally computed,
+    // unless there is some benefit to returning the raw values.
+    K = K.array() / K(2, 2);
+    Eigen::Vector3d const t{C.topRows(3) / C(3)};
+
+    return {ToIsometry3d(R, t), K};
 }
 
 // The 2n x 12 matrix assembled by stacking up the constraints from (MVG Eq. 7.2)
