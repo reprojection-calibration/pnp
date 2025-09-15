@@ -78,6 +78,25 @@ struct PinholeCostFunction {
 
 using namespace reprojection_calibration::pnp;
 
+// We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.
+TEST(NonlinearRefinement, TestPinholeCostFunction) {
+    // NOTE(Jack): The reason that we have these ugly unfamiliar std::arrays and calls to .data(), but nowhere else, is
+    // because in this test we are essentally manually simulating all the magic that Ceres will do behind the scenes for
+    // us, managing the memory and passing arguments etc. during the optimization process. It is my hope and vision that
+    // these raw pointers etc. can be limited to testing, and not actually filter into the rest of the code if handled
+    // smartly (ex. using Eigen::Map and Eigen::Ref).
+    std::array<double, 4> const pinhole_intrinsics{600, 600, 360, 240};
+    PinholeCostFunction const cost_function{pinhole_intrinsics[2], pinhole_intrinsics[3]};
+
+    std::array<double, 6> const pose{0, 0, 0, 0, 0, 0};
+    std::array<double, 3> const point{0, 0, 10};  // Point that will project to the center of the image
+    std::array<double, 2> residual{};
+    cost_function.operator()<double>(pinhole_intrinsics.data(), pose.data(), point.data(), residual.data());
+
+    EXPECT_FLOAT_EQ(residual[0], 0.0);
+    EXPECT_FLOAT_EQ(residual[1], 0.0);
+}
+
 TEST(NonlinearRefinement, TestTransformPointsTranslation) {
     Eigen::Vector<double, 6> const tf{0, 0, 0, 1, 2, 3};  // Translation only
     Eigen::Vector3d const point{5, 10, 15};
@@ -114,7 +133,7 @@ TEST(NonlinearRefinement, TestPinholeProjection) {
     // NOTE(Jack): I am not 100% sure if the pixels at x=720 should actually be part of the valid pixel group! These are
     // technically one out of bounds based on the discretization of the pixels in the image. Our camera model currently
     // does no bounds checking so this is not detected. If we add "valid pixel checking" these tests at the right and
-    // bottom might change as they are invalid pixels.
+    // bottom might change as they are invalid pixels by one pixel.
     Eigen::Vector3d const right_point{360, 0, 600};
     Eigen::Vector2d const right_pixel{PinholeProjection(pinhole_intrinsics.data(), right_point)};
     EXPECT_TRUE(right_pixel.isApprox(Eigen::Vector2d{720, pinhole_intrinsics[3]}));
