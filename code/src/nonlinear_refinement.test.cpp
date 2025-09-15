@@ -4,6 +4,8 @@
 
 #include <Eigen/Dense>
 
+#include "multiple_view_geometry_data_generator.hpp"
+
 namespace reprojection_calibration::pnp {
 
 // TODO(Jack): What is the final and best type for camera going to be? Raw pointer smells to me, or is at least not 100%
@@ -44,57 +46,95 @@ Eigen::Vector<T, 3> TransformPoint(Eigen::Ref<Eigen::Vector<T, 6> const> const& 
 
 // Relation between eigen and ceres: https://groups.google.com/g/ceres-solver/c/7ZH21XX6HWU
 struct PinholeCostFunction {
-    explicit PinholeCostFunction(double const u, double const v) : u_{u}, v_{v} {}
+    explicit PinholeCostFunction(Eigen::Vector2d const& pixel, Eigen::Vector3d const& point)
+        : pixel_{pixel}, point_{point} {}
 
     // This is the contact line were ceres requirements for using raw pointers hits our desire to use more expressive
     // eigen types. That is why here in the operator() we find the usage of the Eigen::Map class.
     template <typename T>
-    bool operator()(T const* const pinhole_intrinsics, T const* const input_pose, T const* const input_point,
-                    T* const residual) const {
+    bool operator()(T const* const pinhole_intrinsics, T const* const input_pose, T* const residual) const {
         // WARN(Jack): Is there a way to canonically force the program to make sure the right memory is allocated and
         // referenced to by these raw pointers? Ceres forces this pointer interface so I don't think we can easily do
         // that but consider how we  can design the program to handle that automatically.
         Eigen::Map<Eigen::Vector<T, 6> const> pose(input_pose);
-        Eigen::Map<Eigen::Vector<T, 3> const> point(input_point);
-        Eigen::Vector<T, 3> const point_co{TransformPoint<T>(pose, point)};
+        Eigen::Vector<T, 3> const point_co{TransformPoint<T>(pose, point_.cast<T>())};
 
         Eigen::Vector<T, 2> const pixel{PinholeProjection(pinhole_intrinsics, point_co)};
 
-        residual[0] = T(u_) - pixel[0];
-        residual[1] = T(v_) - pixel[1];
+        residual[0] = T(pixel_[0]) - pixel[0];
+        residual[1] = T(pixel_[1]) - pixel[1];
 
         return true;
     }
 
-    static ceres::CostFunction* Create(double const u, double const v) {
-        return new ceres::AutoDiffCostFunction<PinholeCostFunction, 2, 4, 6, 3>(new PinholeCostFunction(u, v));
+    static ceres::CostFunction* Create(Eigen::Vector2d const& pixel, Eigen::Vector3d const& point) {
+        return new ceres::AutoDiffCostFunction<PinholeCostFunction, 2, 4, 6>(new PinholeCostFunction(pixel, point));
     }
 
-    double u_;
-    double v_;
+    Eigen::Vector2d pixel_;
+    Eigen::Vector3d point_;
 };
 
 }  // namespace reprojection_calibration::pnp
 
 using namespace reprojection_calibration::pnp;
 
+TEST(NonlinearRefinement, xxx) {
+    MvgFrameGenerator const generator{MvgFrameGenerator()};
+    MvgFrame frame{generator.Generate()};  // This should be const!
+
+    std::array<double, 4> pinhole_intrinsics{600, 600, 360, 240};
+    Se3 pose{frame.pose};
+
+    ceres::Problem problem;
+    for (Eigen::Index i{0}; i < frame.pixels.rows(); ++i) {
+        ceres::CostFunction* const cost_function{PinholeCostFunction::Create(frame.pixels.row(i), frame.points.row(i))};
+        problem.AddResidualBlock(cost_function, nullptr /* squared loss */, pinhole_intrinsics.data(), pose.data());
+    }
+    EXPECT_FLOAT_EQ(2.0, 0.0);
+}
+
 // We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.
-TEST(NonlinearRefinement, TestPinholeCostFunction) {
+TEST(NonlinearRefinement, TestPinholeCostFunctionResidual) {
     // NOTE(Jack): The reason that we have these ugly unfamiliar std::arrays and calls to .data(), but nowhere else, is
-    // because in this test we are essentally manually simulating all the magic that Ceres will do behind the scenes for
-    // us, managing the memory and passing arguments etc. during the optimization process. It is my hope and vision that
-    // these raw pointers etc. can be limited to testing, and not actually filter into the rest of the code if handled
-    // smartly (ex. using Eigen::Map and Eigen::Ref).
+    // because in this test we are essentially manually simulating all the magic that Ceres will do behind the scenes
+    // for us, managing the memory and passing arguments etc. during the optimization process. It is my hope and vision
+    // that these raw pointers etc. can be limited to testing, and not actually filter into the rest of the code if
+    // handled smartly (ex. using Eigen::Map and Eigen::Ref).
     std::array<double, 4> const pinhole_intrinsics{600, 600, 360, 240};
-    PinholeCostFunction const cost_function{pinhole_intrinsics[2], pinhole_intrinsics[3]};
+    Eigen::Vector2d const pixel{pinhole_intrinsics[2], pinhole_intrinsics[3]};
+    Eigen::Vector3d const point{0, 0, 10};  // Point that will project to the center of the image
+    PinholeCostFunction const cost_function{pixel, point};
 
     std::array<double, 6> const pose{0, 0, 0, 0, 0, 0};
-    std::array<double, 3> const point{0, 0, 10};  // Point that will project to the center of the image
     std::array<double, 2> residual{};
-    cost_function.operator()<double>(pinhole_intrinsics.data(), pose.data(), point.data(), residual.data());
+    cost_function.operator()<double>(pinhole_intrinsics.data(), pose.data(), residual.data());
 
     EXPECT_FLOAT_EQ(residual[0], 0.0);
     EXPECT_FLOAT_EQ(residual[1], 0.0);
+}
+
+// NOTE: We do not test cost_function->Evaluate() in the following test because
+// allocating the memory of the input pointers takes some thought, but cost_function->Evaluate()
+// should be tested when there is interest and time :)
+TEST(NonlinearRefinement, TestPinholeCostFunctionCreate) {
+    Eigen::Vector2d const pixel{360, 240};
+    Eigen::Vector3d const point{0, 0, 10};
+    ceres::CostFunction const* const cost_function{PinholeCostFunction::Create(pixel, point)};
+
+    EXPECT_EQ(std::size(cost_function->parameter_block_sizes()), 2);
+    EXPECT_EQ(cost_function->parameter_block_sizes()[0], 4);  // pinhole intrinsics
+    EXPECT_EQ(cost_function->parameter_block_sizes()[1], 6);  // camera pose
+    EXPECT_EQ(cost_function->num_residuals(), 2);
+
+    // WARN: The plain use of the ParameterCostFunction::Create() method does not
+    // ensure the destruction of the resource allocated by the Create() method.
+    // Therefore we need to call delete here, extra. Ceres normally handles this
+    // when it uses create. But we do it here explicitly and without a class that
+    // manages the memory allocation just cause this is a small part of a small
+    // test. If we end up really ever using it outside of Ceres then we need to do
+    // RAII.
+    delete cost_function;
 }
 
 TEST(NonlinearRefinement, TestTransformPointsTranslation) {
