@@ -53,6 +53,7 @@ Eigen::MatrixX2d MvgFrameGenerator::Project(Eigen::MatrixX3d const& points_w, Ei
                                             Eigen::Isometry3d const& tf_co_w) {
     // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not match our
     // expectations about matrix dimensions after the fact.
+    // TODO(Jack): Should we use the pinhole projection from the nonlinear refinement optimization here?
     Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
     Eigen::MatrixX2d const pixels{(K * points_homog_co.leftCols(3).transpose()).transpose().rowwise().hnormalized()};
 
