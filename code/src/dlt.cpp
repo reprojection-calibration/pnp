@@ -10,22 +10,19 @@ namespace reprojection_calibration::pnp {
 // NOTE(Jack): We probably mainly want only the pose, but we calculate K anyway as part of the process, so following the
 // "law of useful return", we return K too.
 std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
+    // Normalize
     auto const [normalized_pixels, tf_pixels]{NormalizeColumnWise(pixels)};
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
+
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA(normalized_pixels, normalized_points)};
-
     Eigen::Matrix<double, 3, 4> const P{SolveForP(A)};
-    // Denormalize - MVG Algorithm 7.1 step (iii)
-    Eigen::Matrix<double, 3, 4> const P_star{tf_pixels.inverse() * P * tf_points};
+    Eigen::Matrix<double, 3, 4> const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize)
 
-    // NOTE(Jack): We know the K matrix ahead of time, at least that is then assumption the opencv pnp implementation
-    // makes, therefore the question is; Can we somehow use that knowledge to make our DLT better, and eliminate that we
-    // solve for K here? Or should we just follow the law of useful return and return T and K? For now we will do the
-    // latter but let's keep our eyes peeled for possible simplifications.
+    // Extract camera parameters
     auto [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
-    Eigen::Vector3d const C{CalculateCameraCenter(P_star)};
+    Eigen::Vector3d const camera_center{CalculateCameraCenter(P_star)};
 
-    return {ToIsometry3d(R, C), K};
+    return {ToIsometry3d(R, camera_center), K};
 }
 
 // The 2n x 12 matrix assembled by stacking up the constraints from (MVG Eq. 7.2)
@@ -61,7 +58,7 @@ Eigen::Matrix<double, 3, 4> SolveForP(Eigen::Matrix<double, Eigen::Dynamic, 12> 
     Eigen::JacobiSVD<Eigen::MatrixXd> svd;
     svd.compute(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-    // TODO (Jack): There has to be a more expressive way to pack .col(11) into Pu
+    // TODO (Jack): There has to be a more expressive way to pack .col(11) into P.
     Eigen::Matrix<double, 3, 4> P;
     P.row(0) = svd.matrixV().col(11).topRows(4);
     P.row(1) = svd.matrixV().col(11).middleRows(4, 4);
