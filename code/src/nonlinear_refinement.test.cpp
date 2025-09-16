@@ -12,16 +12,17 @@ using namespace reprojection_calibration::pnp;
 
 TEST(NonlinearRefinement, xxx) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
-    MvgFrame frame{generator.Generate()};  // This should be const!
-
-    std::array<double, 4> pinhole_intrinsics{600, 600, 360, 240};
-    Se3 pose{frame.pose};
-    pose = ToSe3(FromSe3(pose).inverse());
+    MvgFrame const frame{generator.Generate()};
+    Eigen::Array<double, 4, 1> const pinhole_intrinsics{600, 600, 360, 240};  // This should be retrieved from MVG!
+    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{pinhole_intrinsics};
+    Se3 const frame_pose_inverted{ToSe3(FromSe3(frame.pose).inverse())};
+    Se3 pose_to_optimize{frame_pose_inverted};
 
     ceres::Problem problem;
     for (Eigen::Index i{0}; i < frame.pixels.rows(); ++i) {
         ceres::CostFunction* const cost_function{PinholeCostFunction::Create(frame.pixels.row(i), frame.points.row(i))};
-        problem.AddResidualBlock(cost_function, nullptr, pinhole_intrinsics.data(), pose.data());
+        problem.AddResidualBlock(cost_function, nullptr, pinhole_intrinsics_to_optimize.data(),
+                                 pose_to_optimize.data());
     }
 
     ceres::Solver::Options options;
@@ -29,10 +30,9 @@ TEST(NonlinearRefinement, xxx) {
     options.minimizer_progress_to_stdout = true;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
-    std::cout << summary.FullReport() << "\n";
 
-    // ERROR THIS TEST NEEDS TO BE FINISHED!!!
-    EXPECT_FLOAT_EQ(0.0, 0.0);
+    EXPECT_TRUE(pose_to_optimize.isApprox(frame_pose_inverted));
+    EXPECT_TRUE(pinhole_intrinsics_to_optimize.isApprox(pinhole_intrinsics));
 }
 
 // We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.

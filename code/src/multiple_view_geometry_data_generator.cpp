@@ -5,7 +5,7 @@
 namespace reprojection_calibration::pnp {
 
 MvgFrameGenerator::MvgFrameGenerator()
-    : points_{Eigen::MatrixX3d::Random(6, 3)}, K_{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}} {}
+    : points_{Eigen::MatrixX3d::Random(50, 3)}, K_{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}} {}
 
 MvgFrame MvgFrameGenerator::Generate() const {
     // Generate pose

@@ -12,7 +12,7 @@ TEST(MatrixUtilities, TestInterleaveRowWise) {
 
     Eigen::MatrixX2d const interleaved_pixels{InterleaveRowWise(frame_i.pixels)};
 
-    EXPECT_EQ(interleaved_pixels.rows(), 12);
+    EXPECT_EQ(interleaved_pixels.rows(), 100);
     // First pixel is duplicated
     EXPECT_TRUE(interleaved_pixels.row(0).isApprox(frame_i.pixels.row(0)));
     EXPECT_TRUE(interleaved_pixels.row(1).isApprox(frame_i.pixels.row(0)));
