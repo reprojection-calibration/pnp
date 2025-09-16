@@ -13,12 +13,12 @@ TEST(NonlinearRefinement, xxx) {
         Eigen::Array<double, 4, 1> const pinhole_intrinsics{600, 600, 360, 240};  // This should be retrieved from MVG!
 
         // Note the inverse on the tf!!!
-        auto const [tf, K]{
-            NonlinearRefinement(frame_i.pixels, frame_i.points, FromSe3(frame_i.pose).inverse(), ToK(pinhole_intrinsics))};
+        auto const [tf, K]{NonlinearRefinement(frame_i.pixels, frame_i.points, FromSe3(frame_i.pose).inverse(),
+                                               ToK(pinhole_intrinsics))};
 
         EXPECT_TRUE(tf.isApprox(FromSe3(frame_i.pose).inverse())) << "Optimization result:\n"
-                                                                << ToSe3(tf) << "\noptimization input:\n"
-                                                                << ToSe3(FromSe3(frame_i.pose).inverse());
+                                                                  << ToSe3(tf) << "\noptimization input:\n"
+                                                                  << ToSe3(FromSe3(frame_i.pose).inverse());
         EXPECT_TRUE(K.isApprox(ToK(pinhole_intrinsics))) << "Optimization result:\n"
                                                          << K << "\noptimization input:\n"
                                                          << ToK(pinhole_intrinsics);
