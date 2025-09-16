@@ -91,6 +91,14 @@ TEST(NonlinearRefinement, xxx) {
         ceres::CostFunction* const cost_function{PinholeCostFunction::Create(frame.pixels.row(i), frame.points.row(i))};
         problem.AddResidualBlock(cost_function, nullptr /* squared loss */, pinhole_intrinsics.data(), pose.data());
     }
+
+    ceres::Solver::Options options;
+    options.linear_solver_type = ceres::DENSE_SCHUR;
+    options.minimizer_progress_to_stdout = true;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+    std::cout << summary.FullReport() << "\n";
+
     EXPECT_FLOAT_EQ(2.0, 0.0);
 }
 
