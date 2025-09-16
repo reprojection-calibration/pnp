@@ -16,11 +16,12 @@ TEST(NonlinearRefinement, xxx) {
 
     std::array<double, 4> pinhole_intrinsics{600, 600, 360, 240};
     Se3 pose{frame.pose};
+    pose = ToSe3(FromSe3(pose).inverse());
 
     ceres::Problem problem;
     for (Eigen::Index i{0}; i < frame.pixels.rows(); ++i) {
         ceres::CostFunction* const cost_function{PinholeCostFunction::Create(frame.pixels.row(i), frame.points.row(i))};
-        problem.AddResidualBlock(cost_function, nullptr /* squared loss */, pinhole_intrinsics.data(), pose.data());
+        problem.AddResidualBlock(cost_function, nullptr, pinhole_intrinsics.data(), pose.data());
     }
 
     ceres::Solver::Options options;
