@@ -56,6 +56,7 @@ foreach(TEST IN LISTS TESTS)
     add_executable(${TEST_NAME} ${TEST})
     target_include_directories(${TEST_NAME} PRIVATE
             include
+            src # Needed here because we at least need access to MultipleViewGeometryDataGenerator
     )
     target_link_libraries(${TEST_NAME}
             GTest::gtest_main
