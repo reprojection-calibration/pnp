@@ -8,31 +8,67 @@
 
 #include "multiple_view_geometry_data_generator.hpp"
 
-using namespace reprojection_calibration::pnp;
+namespace reprojection_calibration::pnp {
 
-TEST(NonlinearRefinement, xxx) {
-    MvgFrameGenerator const generator{MvgFrameGenerator()};
-    MvgFrame const frame{generator.Generate()};
-    Eigen::Array<double, 4, 1> const pinhole_intrinsics{600, 600, 360, 240};  // This should be retrieved from MVG!
-    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{pinhole_intrinsics};
-    Se3 const frame_pose_inverted{ToSe3(FromSe3(frame.pose).inverse())};
-    Se3 pose_to_optimize{frame_pose_inverted};
+Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array) {
+    Eigen::Matrix3d K{Eigen::Matrix3d::Identity()};
+    K(0, 0) = array[0];
+    K(1, 1) = array[1];
+    K(0, 2) = array[2];
+    K(1, 2) = array[3];
+
+    return K;
+};
+
+// TODO(Jack): Increase consistency of the use of SE3 or se3 - we really only introduced the se3 in the general source
+// code so that we could test pose values easily. Unless we are in the core optimization logic or testing we should be
+// using SE3. Or at least that is my idea right now :)
+// TODO(Jack): A function that converts from the matrix and array representation of K easily
+std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
+                                                                   Eigen::MatrixX3d const& points,
+                                                                   Eigen::Isometry3d const& initial_pose,
+                                                                   Eigen::Matrix3d const& initial_K) {
+    Se3 pose_to_optimize{ToSe3(initial_pose)};
+    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{initial_K(0, 0), initial_K(1, 1), initial_K(0, 2),
+                                                              initial_K(1, 2)};
 
     ceres::Problem problem;
-    for (Eigen::Index i{0}; i < frame.pixels.rows(); ++i) {
-        ceres::CostFunction* const cost_function{PinholeCostFunction::Create(frame.pixels.row(i), frame.points.row(i))};
+    for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
+        ceres::CostFunction* const cost_function{PinholeCostFunction::Create(pixels.row(i), points.row(i))};
         problem.AddResidualBlock(cost_function, nullptr, pinhole_intrinsics_to_optimize.data(),
                                  pose_to_optimize.data());
     }
 
+    // TODO(Jack): Law of useful return states that we should probably be returning this diagnostic information so that
+    // people can diagnose failures.
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    EXPECT_TRUE(pose_to_optimize.isApprox(frame_pose_inverted));
-    EXPECT_TRUE(pinhole_intrinsics_to_optimize.isApprox(pinhole_intrinsics));
+    return {FromSe3(pose_to_optimize), ToK(pinhole_intrinsics_to_optimize)};
+}
+
+}  // namespace reprojection_calibration::pnp
+
+using namespace reprojection_calibration::pnp;
+
+TEST(NonlinearRefinement, xxx) {
+    MvgFrameGenerator const generator{MvgFrameGenerator()};
+    MvgFrame const frame{generator.Generate()};
+    Eigen::Array<double, 4, 1> const pinhole_intrinsics{600, 600, 360, 240};  // This should be retrieved from MVG!
+
+    // Note the inverse on the tf!!!
+    auto const [tf, K]{
+        NonlinearRefinement(frame.pixels, frame.points, FromSe3(frame.pose).inverse(), ToK(pinhole_intrinsics))};
+
+    EXPECT_TRUE(tf.isApprox(FromSe3(frame.pose).inverse())) << "Optimization result:\n"
+                                                            << ToSe3(tf) << "\noptimization input:\n"
+                                                            << ToSe3(FromSe3(frame.pose).inverse());
+    EXPECT_TRUE(K.isApprox(ToK(pinhole_intrinsics))) << "Optimization result:\n"
+                                                     << K << "\noptimization input:\n"
+                                                     << ToK(pinhole_intrinsics);
 }
 
 // We test that a point on the optical axis (0,0,z) projects to the center of the image (cx, cy) and has residual zero.
