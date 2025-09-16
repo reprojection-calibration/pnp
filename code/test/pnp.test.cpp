@@ -9,13 +9,12 @@ using namespace reprojection_calibration::pnp;
 TEST(Pnp, TestPnp) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
     MvgFrame const frame_i{generator.Generate()};
+
     PnpResult const pnp_result{Pnp(frame_i.pixels, frame_i.points)};
-
     EXPECT_TRUE(std::holds_alternative<Eigen::Isometry3d>(pnp_result));
-    Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
 
-    Se3 const pose_gt{frame_i.pose};
-    EXPECT_TRUE(pose_i.isApprox(FromSe3(pose_gt)));
+    Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
+    EXPECT_TRUE(pose_i.isApprox(FromSe3(frame_i.pose)));
 }
 
 TEST(Pnp, MismatchedCorrespondence) {
