@@ -26,9 +26,8 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::Matrix
 
     // TODO(Jack): Law of useful return states that we should probably be returning this diagnostic information so that
     // people can diagnose failures.
+    // TODO(Jack): Tune best optimizer options for the problem at hand
     ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_SCHUR;
-    options.minimizer_progress_to_stdout = true;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 

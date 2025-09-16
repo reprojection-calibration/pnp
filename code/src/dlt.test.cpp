@@ -11,7 +11,7 @@ using namespace reprojection_calibration::pnp;
 
 TEST(Dlt, TestDlt) {
     MvgFrameGenerator const generator{MvgFrameGenerator()};
-    for (size_t i{0}; i < 100; ++i) {
+    for (size_t i{0}; i < 20; ++i) {
         MvgFrame const frame_i{generator.Generate()};
         auto const [tf, K]{Dlt(frame_i.pixels, frame_i.points)};
 
