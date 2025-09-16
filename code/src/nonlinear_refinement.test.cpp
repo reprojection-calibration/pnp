@@ -1,56 +1,8 @@
 #include "nonlinear_refinement.hpp"
 
-#include <ceres/ceres.h>  // TODO(Jack): Add header ordering to the clang format, this is madness!
-#include <ceres/rotation.h>
 #include <gtest/gtest.h>
 
-#include <Eigen/Dense>
-
 #include "multiple_view_geometry_data_generator.hpp"
-
-namespace reprojection_calibration::pnp {
-
-Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array) {
-    Eigen::Matrix3d K{Eigen::Matrix3d::Identity()};
-    K(0, 0) = array[0];
-    K(1, 1) = array[1];
-    K(0, 2) = array[2];
-    K(1, 2) = array[3];
-
-    return K;
-};
-
-// TODO(Jack): Increase consistency of the use of SE3 or se3 - we really only introduced the se3 in the general source
-// code so that we could test pose values easily. Unless we are in the core optimization logic or testing we should be
-// using SE3. Or at least that is my idea right now :)
-// TODO(Jack): A function that converts from the matrix and array representation of K easily
-std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
-                                                                   Eigen::MatrixX3d const& points,
-                                                                   Eigen::Isometry3d const& initial_pose,
-                                                                   Eigen::Matrix3d const& initial_K) {
-    Se3 pose_to_optimize{ToSe3(initial_pose)};
-    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{initial_K(0, 0), initial_K(1, 1), initial_K(0, 2),
-                                                              initial_K(1, 2)};
-
-    ceres::Problem problem;
-    for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
-        ceres::CostFunction* const cost_function{PinholeCostFunction::Create(pixels.row(i), points.row(i))};
-        problem.AddResidualBlock(cost_function, nullptr, pinhole_intrinsics_to_optimize.data(),
-                                 pose_to_optimize.data());
-    }
-
-    // TODO(Jack): Law of useful return states that we should probably be returning this diagnostic information so that
-    // people can diagnose failures.
-    ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_SCHUR;
-    options.minimizer_progress_to_stdout = true;
-    ceres::Solver::Summary summary;
-    ceres::Solve(options, &problem, &summary);
-
-    return {FromSe3(pose_to_optimize), ToK(pinhole_intrinsics_to_optimize)};
-}
-
-}  // namespace reprojection_calibration::pnp
 
 using namespace reprojection_calibration::pnp;
 

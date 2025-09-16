@@ -17,6 +17,7 @@ set(SRC_FILES
         src/dlt.cpp
         src/matrix_utilities.cpp
         src/multiple_view_geometry_data_generator.cpp
+        src/nonlinear_refinement.cpp
         src/pnp.cpp
         src/pose_utilities.cpp
 )

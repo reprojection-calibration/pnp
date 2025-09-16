@@ -7,6 +7,11 @@
 
 namespace reprojection_calibration::pnp {
 
+std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::MatrixX2d const& pixels,
+                                                                   Eigen::MatrixX3d const& points,
+                                                                   Eigen::Isometry3d const& initial_pose,
+                                                                   Eigen::Matrix3d const& initial_K);
+
 // TODO(Jack): What is the final and best type for camera going to be? Raw pointer smells to me, or is at least not 100%
 // necessary considering how far along with ceres we are (not far).
 template <typename T>
@@ -73,5 +78,7 @@ struct PinholeCostFunction {
     Eigen::Vector2d pixel_;
     Eigen::Vector3d point_;
 };
+
+Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array);
 
 }  // namespace reprojection_calibration::pnp
