@@ -24,8 +24,10 @@ set(SRC_FILES
 add_library(${PROJECT_NAME} SHARED
         ${SRC_FILES}
 )
-target_include_directories(${PROJECT_NAME} PRIVATE
-        include
+target_include_directories(${PROJECT_NAME} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/>
+        $<INSTALL_INTERFACE:include/>
 )
 target_link_libraries(${PROJECT_NAME}
         Eigen3::Eigen
@@ -54,10 +56,6 @@ set(TESTS
 foreach(TEST IN LISTS TESTS)
     get_filename_component(TEST_NAME ${TEST} NAME)
     add_executable(${TEST_NAME} ${TEST})
-    target_include_directories(${TEST_NAME} PRIVATE
-            include
-            src # Needed here because we at least need access to MultipleViewGeometryDataGenerator
-    )
     target_link_libraries(${TEST_NAME}
             GTest::gtest_main
             ${PROJECT_NAME}
