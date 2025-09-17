@@ -18,7 +18,7 @@ TEST(TempGeometricTransformsTest, Test3DTransformation) {
     Eigen::Vector3d const ceres_point{TransformPoint<double>(tf_slash_pose, point)};
 
     Eigen::Isometry3d const tf_co_w{FromSe3(tf_slash_pose)};
-    Eigen::Vector3d const custom_point{(tf_co_w * point.homogeneous())}; // DANGER - COPY PASTED LOGIC!!!
+    Eigen::Vector3d const custom_point{(tf_co_w * point.homogeneous())};  // DANGER - COPY PASTED LOGIC!!!
 
     EXPECT_TRUE(ceres_point.isApprox(custom_point));
 }
