@@ -5,11 +5,12 @@
 Clear delineation between the public and private interfaces of a library is required to effectively manage change at
 scale.
 
-In this repository we have chosen a directory and file structure that emphasizes this seperation by placing the public
+In this repository we have chosen a directory and file structure that emphasizes this separation by placing the public
 interface header files in the [include/pnp/](code/include/pnp/) folder. The headers defining the internal private
 interface are found in the [src/](code/src/) folder directly next to their associated implementation and unit test
-files. This structure helps the developer clearly understand what the public interface actually is and forces the us to
-consciously think about breaking changes.
+files. During library development both the public and private headers are available (i.e. part of the `BUILD_INTERFACE`)
+but when the library is installed only the public headers are present and available (i.e. part of the
+`INSTALL_INTERFACE`).
 
 * Benefit #1) Hidden private API - There is a rule in software engineering that says the entire accessible part of an
   API, given enough users, will be entirely used. Even parts of the API which the development team did not intend for
@@ -21,5 +22,21 @@ consciously think about breaking changes.
   private namespace anyway. Our preference is not even temp a consumer of the libray with the private API and simply not
   install it. We should not however that for header only libraries, a common way to deliver C++ code (ex. Eigen), the
   private namespace method is the only available option to hide the internal API.
+* Benefit #2) Easier maintenance of the public API - The entire public API is described in full by the header files
+  in [include/pnp/](code/include/pnp/) and their associated tests in [test/](code/test/). Therefore, a developer can
+  easily recognize when they are making changes to the public API that will break the interface for downstream
+  consumers. This makes the connection between [semantic versioning](https://semver.org/) and the source code a literal
+  structural component of the repository.
+* Benefit #3) Reduced source code dependencies - Dependencies on source code can be especially hard to manage. In C++
+  source code dependencies on other projects are introduced via the `#include` directive. All the include directives in
+  the public API (i.e. those found at the top of the files found in [include/pnp/](code/include/pnp/)) must be
+  present on the system of the user consuming the library. Therefore, there is a premium on reducing the number of
+  includes in the public API and in some cases entirely redesigning the public API to remove "exotic" includes.
+  If for example in the public API of your header there is a requirement for an exotic include, for example a JSON class
+  defined in a thirdparty Github repository - you can basically count on the fact that your libray is an order of
+  magnitude harder to use than it should be.
+*
+* Following the principle of "include what you use" (and only what you
+  use!) means th
 
 ## Open implementation questions
