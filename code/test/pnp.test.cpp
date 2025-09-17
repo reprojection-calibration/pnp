@@ -7,15 +7,16 @@
 using namespace reprojection_calibration::pnp;
 
 TEST(Pnp, TestPnp) {
-    // TODO(Jack): Add large scale testing with noise etc.
     MvgFrameGenerator const generator{MvgFrameGenerator()};
-    MvgFrame const frame_i{generator.Generate()};
+    for (size_t i{0}; i < 20; ++i) {
+        MvgFrame const frame_i{generator.Generate()};
 
-    PnpResult const pnp_result{Pnp(frame_i.pixels, frame_i.points)};
-    EXPECT_TRUE(std::holds_alternative<Eigen::Isometry3d>(pnp_result));
+        PnpResult const pnp_result{Pnp(frame_i.pixels, frame_i.points)};
+        EXPECT_TRUE(std::holds_alternative<Eigen::Isometry3d>(pnp_result));
 
-    Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
-    EXPECT_TRUE(pose_i.isApprox(FromSe3(frame_i.pose)));
+        Eigen::Isometry3d const pose_i{std::get<Eigen::Isometry3d>(pnp_result)};
+        EXPECT_TRUE(pose_i.isApprox(FromSe3(frame_i.pose)));
+    }
 }
 
 TEST(Pnp, MismatchedCorrespondence) {
