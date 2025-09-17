@@ -28,15 +28,21 @@ but when the library is installed only the public headers are present and availa
   consumers. This makes the connection between [semantic versioning](https://semver.org/) and the source code a literal
   structural component of the repository.
 * Benefit #3) Reduced source code dependencies - Dependencies on source code can be especially hard to manage. In C++
-  source code dependencies on other projects are introduced via the `#include` directive. All the include directives in
+  source code dependencies on other projects are introduced via the `#include` directive. All the included files in
   the public API (i.e. those found at the top of the files found in [include/pnp/](code/include/pnp/)) must be
   present on the system of the user consuming the library. Therefore, there is a premium on reducing the number of
-  includes in the public API and in some cases entirely redesigning the public API to remove "exotic" includes.
-  If for example in the public API of your header there is a requirement for an exotic include, for example a JSON class
-  defined in a thirdparty Github repository - you can basically count on the fact that your libray is an order of
-  magnitude harder to use than it should be.
-*
-* Following the principle of "include what you use" (and only what you
-  use!) means th
+  includes in the public API and in some cases entirely redesigning the public API to remove "exotic" includes. If for
+  example in the public API of your header there is a requirement for an exotic include, for example a JSON class
+  defined in a third-party Github repository - and there is no mechanism to automatically install it - you can basically
+  count on the fact that your libray is an order of magnitude harder to use than it could be. Thoughtfully designing and
+  only installing a clearly defined public API can dramatically reduce the source code dependencies of an installed
+  library.
+* Benefit #4) Tight coupling of source code and unit testing - Searching for corresponding .hpp, .cpp and the
+  corresponding unit test files often consume an unnecessary amount of time. By putting these all directly adjacent to
+  one another in the [src/](code/src/) folder we make it easy to find corresponding files and make the relationship
+  between files a structural part of the repository itself.
 
 ## Open implementation questions
+
+* What to do with K
+* How to handle noise and covariance estimation
