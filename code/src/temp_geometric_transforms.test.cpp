@@ -11,19 +11,19 @@
 
 using namespace reprojection_calibration::pnp;
 
-TEST(XXX, ZZZ) {
+TEST(TempGeometricTransformsTest, Test3DTransformation) {
     Se3 const tf_slash_pose{ceres::constants::pi, ceres::constants::pi, ceres::constants::pi, 1, -2, 3};
     Eigen::Vector3d const point{1, 2, 3};
 
     Eigen::Vector3d const ceres_point{TransformPoint<double>(tf_slash_pose, point)};
 
     Eigen::Isometry3d const tf_co_w{FromSe3(tf_slash_pose)};
-    Eigen::Vector3d const custom_point{(tf_co_w * point.homogeneous())};
+    Eigen::Vector3d const custom_point{(tf_co_w * point.homogeneous())}; // DANGER - COPY PASTED LOGIC!!!
 
     EXPECT_TRUE(ceres_point.isApprox(custom_point));
 }
 
-TEST(FFF, HHH) {
+TEST(TempGeometricTransformsTest, TestPinholeProjection) {
     Eigen::MatrixX3d const points_w{{0.00, 0.00, 5.00},   {1.00, 1.00, 5.00},   {-1.00, -1.00, 5.00},
                                     {2.00, -1.00, 10.00}, {-2.00, 1.00, 10.00}, {0.50, -0.50, 7.00}};
     Eigen::Matrix3d const K{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}};
