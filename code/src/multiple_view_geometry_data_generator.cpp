@@ -5,7 +5,7 @@
 namespace reprojection_calibration::pnp {
 
 MvgFrameGenerator::MvgFrameGenerator()
-    : points_{Eigen::MatrixX3d::Random(6, 3)}, K_{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}} {}
+    : points_{Eigen::MatrixX3d::Random(50, 3)}, K_{{600, 0, 360}, {0, 600, 240}, {0, 0, 1}} {}
 
 MvgFrame MvgFrameGenerator::Generate() const {
     // Generate pose
@@ -18,16 +18,17 @@ MvgFrame MvgFrameGenerator::Generate() const {
     Eigen::Vector3d const camera_direction{TrackPoint(origin, camera_position)};
 
     // TODO(Jack): Can we construct this directly or do we need to use << - this is done in more than one place.
-    Se3 viewing_pose;
-    viewing_pose << camera_direction, camera_position;
+    Se3 viewing_pose_w_co;
+    viewing_pose_w_co << camera_direction, camera_position;
 
     // Project points
-    Eigen::Isometry3d const tf_co_w{FromSe3(viewing_pose).inverse()};  // There is an inverse here!!!
+    Eigen::Isometry3d const tf_co_w{FromSe3(viewing_pose_w_co).inverse()};  // There is an inverse here!!!
     Eigen::MatrixX2d const pixels{MvgFrameGenerator::Project(points_, K_, tf_co_w)};
 
-    // TODO(Jack): This viewing pose might be the inverse of the one we actually expect!
-    return MvgFrame{viewing_pose, pixels, points_};
+    return MvgFrame{ToSe3(tf_co_w), pixels, points_};
 }
+
+Eigen::Matrix3d MvgFrameGenerator::GetK() const { return K_; }
 
 Eigen::Vector3d MvgFrameGenerator::TrackPoint(Eigen::Vector3d const& origin, Eigen::Vector3d const& camera_position) {
     // WARN(Jack): In testing this function I found that when the x and y coordinates of the origin and camera_position
@@ -53,6 +54,7 @@ Eigen::MatrixX2d MvgFrameGenerator::Project(Eigen::MatrixX3d const& points_w, Ei
                                             Eigen::Isometry3d const& tf_co_w) {
     // TODO(Jack): Do we need to transform isometries into matrices before we use them? Otherwise it might not match our
     // expectations about matrix dimensions after the fact.
+    // TODO(Jack): Should we use the pinhole projection from the nonlinear refinement optimization here?
     Eigen::MatrixX4d const points_homog_co{(tf_co_w * points_w.rowwise().homogeneous().transpose()).transpose()};
     Eigen::MatrixX2d const pixels{(K * points_homog_co.leftCols(3).transpose()).transpose().rowwise().hnormalized()};
 

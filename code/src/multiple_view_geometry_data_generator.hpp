@@ -19,6 +19,8 @@ class MvgFrameGenerator {
 
     MvgFrame Generate() const;
 
+    Eigen::Matrix3d GetK() const;
+
     // Public only for testing
     static Eigen::Vector3d TrackPoint(Eigen::Vector3d const& point, Eigen::Vector3d const& position);
 

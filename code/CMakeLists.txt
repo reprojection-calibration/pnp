@@ -9,6 +9,7 @@ project(
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 
+find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 set(SRC_FILES
@@ -16,6 +17,7 @@ set(SRC_FILES
         src/dlt.cpp
         src/matrix_utilities.cpp
         src/multiple_view_geometry_data_generator.cpp
+        src/nonlinear_refinement.cpp
         src/pnp.cpp
         src/pose_utilities.cpp
 )
@@ -27,6 +29,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 target_link_libraries(${PROJECT_NAME}
         Eigen3::Eigen
+        Ceres::ceres
 )
 
 include(FetchContent)
@@ -41,8 +44,10 @@ include(GoogleTest)
 set(TESTS
         src/camera_matrix_decomposition.test.cpp
         src/dlt.test.cpp
+        src/temp_geometric_transforms.test.cpp
         src/matrix_utilities.test.cpp
         src/multiple_view_geometry_data_generator.test.cpp
+        src/nonlinear_refinement.test.cpp
         src/pose_utilities.test.cpp
         test/pnp.test.cpp
 )
@@ -51,6 +56,7 @@ foreach(TEST IN LISTS TESTS)
     add_executable(${TEST_NAME} ${TEST})
     target_include_directories(${TEST_NAME} PRIVATE
             include
+            src # Needed here because we at least need access to MultipleViewGeometryDataGenerator
     )
     target_link_libraries(${TEST_NAME}
             GTest::gtest_main
