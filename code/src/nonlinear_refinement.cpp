@@ -14,8 +14,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> NonlinearRefinement(Eigen::Matrix
                                                                    Eigen::Isometry3d const& initial_pose,
                                                                    Eigen::Matrix3d const& initial_K) {
     Se3 pose_to_optimize{ToSe3(initial_pose)};
-    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{initial_K(0, 0), initial_K(1, 1), initial_K(0, 2),
-                                                              initial_K(1, 2)};
+    Eigen::Array<double, 4, 1> pinhole_intrinsics_to_optimize{FromK(initial_K)};
 
     ceres::Problem problem;
     for (Eigen::Index i{0}; i < pixels.rows(); ++i) {
@@ -43,6 +42,10 @@ Eigen::Matrix3d ToK(Eigen::Array<double, 4, 1> const& array) {
     K(1, 2) = array[3];
 
     return K;
+};
+
+Eigen::Array<double, 4, 1> FromK(Eigen::Matrix3d const& matrix) {
+    return {matrix(0, 0), matrix(1, 1), matrix(0, 2), matrix(1, 2)};
 };
 
 }  // namespace reprojection_calibration::pnp

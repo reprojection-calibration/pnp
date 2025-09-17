@@ -30,7 +30,6 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
     Eigen::Matrix3d const sign_mat{sign.asDiagonal()};
 
     Eigen::Matrix3d const K_star{sign_mat * (K / std::abs(K(2, 2)))};
-
     Eigen::Matrix3d R_star{sign_mat * R};
     if (R_star.determinant() < 0) {
         R_star *= -1;
