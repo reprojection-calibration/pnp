@@ -7,6 +7,7 @@
 using namespace reprojection_calibration::pnp;
 
 TEST(Pnp, TestPnp) {
+    // TODO(Jack): Add large scale testing with noise etc.
     MvgFrameGenerator const generator{MvgFrameGenerator()};
     MvgFrame const frame_i{generator.Generate()};
 
