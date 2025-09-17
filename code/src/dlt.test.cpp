@@ -17,7 +17,7 @@ TEST(Dlt, TestDlt) {
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
 
-        Se3 const pose_i{ToSe3(tf.inverse())};  // Don't forget the inverse!
+        Se3 const pose_i{ToSe3(tf)};
         EXPECT_TRUE(pose_i.isApprox(frame_i.pose)) << "Result:\n" << pose_i << "\nexpected result:\n" << frame_i.pose;
 
         EXPECT_TRUE(K.isUpperTriangular());  // Property of camera intrinsic matrix

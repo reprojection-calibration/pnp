@@ -18,15 +18,14 @@ MvgFrame MvgFrameGenerator::Generate() const {
     Eigen::Vector3d const camera_direction{TrackPoint(origin, camera_position)};
 
     // TODO(Jack): Can we construct this directly or do we need to use << - this is done in more than one place.
-    Se3 viewing_pose;
-    viewing_pose << camera_direction, camera_position;
+    Se3 viewing_pose_w_co;
+    viewing_pose_w_co << camera_direction, camera_position;
 
     // Project points
-    Eigen::Isometry3d const tf_co_w{FromSe3(viewing_pose).inverse()};  // There is an inverse here!!!
+    Eigen::Isometry3d const tf_co_w{FromSe3(viewing_pose_w_co).inverse()};  // There is an inverse here!!!
     Eigen::MatrixX2d const pixels{MvgFrameGenerator::Project(points_, K_, tf_co_w)};
 
-    // TODO(Jack): This viewing pose might be the inverse of the one we actually expect!
-    return MvgFrame{viewing_pose, pixels, points_};
+    return MvgFrame{ToSe3(tf_co_w), pixels, points_};
 }
 
 Eigen::Matrix3d MvgFrameGenerator::GetK() const { return K_; }

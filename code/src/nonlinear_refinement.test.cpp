@@ -11,13 +11,12 @@ TEST(NonlinearRefinement, xxx) {
     for (size_t i{0}; i < 20; ++i) {
         MvgFrame const frame_i{generator.Generate()};
 
-        // Note the inverse on the tf!!!
-        auto const [tf, K]{
-            NonlinearRefinement(frame_i.pixels, frame_i.points, FromSe3(frame_i.pose).inverse(), generator.GetK())};
+        auto const [tf,
+                    K]{NonlinearRefinement(frame_i.pixels, frame_i.points, FromSe3(frame_i.pose), generator.GetK())};
 
-        EXPECT_TRUE(tf.isApprox(FromSe3(frame_i.pose).inverse())) << "Optimization result:\n"
-                                                                  << ToSe3(tf) << "\noptimization input:\n"
-                                                                  << ToSe3(FromSe3(frame_i.pose).inverse());
+        EXPECT_TRUE(tf.isApprox(FromSe3(frame_i.pose))) << "Optimization result:\n"
+                                                        << ToSe3(tf) << "\noptimization input:\n"
+                                                        << ToSe3(FromSe3(frame_i.pose));
         EXPECT_TRUE(K.isApprox(generator.GetK())) << "Optimization result:\n"
                                                   << K << "\noptimization input:\n"
                                                   << generator.GetK();
