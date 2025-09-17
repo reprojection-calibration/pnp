@@ -29,6 +29,8 @@ MvgFrame MvgFrameGenerator::Generate() const {
     return MvgFrame{viewing_pose, pixels, points_};
 }
 
+Eigen::Matrix3d MvgFrameGenerator::GetK() const { return K_; }
+
 Eigen::Vector3d MvgFrameGenerator::TrackPoint(Eigen::Vector3d const& origin, Eigen::Vector3d const& camera_position) {
     // WARN(Jack): In testing this function I found that when the x and y coordinates of the origin and camera_position
     // are the same, i.e. the points  are aligned along the z-plane, the algorithm returns nans. There is probably a

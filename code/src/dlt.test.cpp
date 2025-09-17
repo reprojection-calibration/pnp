@@ -20,8 +20,7 @@ TEST(Dlt, TestDlt) {
         Se3 const pose_i{ToSe3(tf.inverse())};  // Don't forget the inverse!
         EXPECT_TRUE(pose_i.isApprox(frame_i.pose)) << "Result:\n" << pose_i << "\nexpected result:\n" << frame_i.pose;
 
-        // TODO(Jack): Honestly we could check exactly the values here because we know them, maybe we should refactor
-        // the data generator to add a getter for K so we can compare it.
         EXPECT_TRUE(K.isUpperTriangular());  // Property of camera intrinsic matrix
+        EXPECT_TRUE(K.isApprox(generator.GetK()));
     }
 }
