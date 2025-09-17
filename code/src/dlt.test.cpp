@@ -17,13 +17,8 @@ TEST(Dlt, TestDlt) {
 
         EXPECT_FLOAT_EQ(tf.linear().determinant(), 1);  // Property of rotation matrix - positive one determinant
 
-        Se3 pose_i{ToSe3(tf)};
-        pose_i.topRows(3) *= -1;  // TODO(Jack): There is some inconsistency here that the Dlt produced pose_i always is
-                                  // the negative of the ground truth pose! Does it have something to do with an inverse
-                                  // coordinate frame or something like that? Idk, but I know it is always opposite the
-                                  // gt value which is why I multiply by -1 here and not just take the absolute value.
-        Se3 const pose_gt{frame_i.pose};
-        EXPECT_TRUE(pose_i.isApprox(pose_gt));
+        Se3 const pose_i{ToSe3(tf.inverse())};  // Don't forget the inverse!
+        EXPECT_TRUE(pose_i.isApprox(frame_i.pose)) << "Result:\n" << pose_i << "\nexpected result:\n" << frame_i.pose;
 
         // TODO(Jack): Honestly we could check exactly the values here because we know them, maybe we should refactor
         // the data generator to add a getter for K so we can compare it.

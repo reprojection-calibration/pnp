@@ -21,7 +21,7 @@ std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt(Eigen::MatrixX2d const& pixel
     auto [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
     Eigen::Vector3d const camera_center{CalculateCameraCenter(P_star)};
 
-    return {ToIsometry3d(R, camera_center), K};
+    return {ToIsometry3d(R, -R * camera_center), K};
 }
 
 // The 2n x 12 matrix assembled by stacking up the constraints from (MVG Eq. 7.2)
