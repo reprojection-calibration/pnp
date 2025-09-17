@@ -19,16 +19,8 @@ PnpResult Pnp(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
     }
 
     auto const [tf, K]{Dlt(pixels, points)};
+    auto const [tf_star, _]{NonlinearRefinement(pixels, points, tf, K)};
 
-    std::cout << tf.matrix() << std::endl;
-    std::cout << K.matrix() << std::endl;
-
-    auto const [tf_star, K_star]{NonlinearRefinement(pixels, points, tf, K)};
-
-    std::cout << tf_star.matrix() << std::endl;
-    std::cout << K_star.matrix() << std::endl;
-
-    // RETURN NLR POSE
     return tf_star;
 }
 
