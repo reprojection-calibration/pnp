@@ -6,11 +6,11 @@ namespace reprojection_calibration::pnp {
 // We implement RQ decomposition in terms of Eigen's built in QR decomposition
 std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> RqDecomposition(Eigen::Matrix3d const& matrix) {
     Eigen::Matrix3d const reverse_rows{{0, 0, 1}, {0, 1, 0}, {1, 0, 0}};
-    Eigen::Matrix3d const reversed{reverse_rows * matrix};
+    Eigen::Matrix3d const reversed_matrix{reverse_rows * matrix};
 
-    Eigen::HouseholderQR<Eigen::Matrix3d> qr(reversed.transpose());
-    Eigen::Matrix3d const Q{qr.householderQ()};
+    Eigen::HouseholderQR<Eigen::Matrix3d> qr(reversed_matrix.transpose());
     Eigen::Matrix3d const R{qr.matrixQR().triangularView<Eigen::Upper>()};
+    Eigen::Matrix3d const Q{qr.householderQ()};
 
     Eigen::Matrix3d const R_star{reverse_rows * R.transpose() * reverse_rows};
     Eigen::Matrix3d const Q_star{reverse_rows * Q.transpose()};
@@ -39,6 +39,7 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
     return {K_star, R_star};
 }
 
+// NOTE(Jack):
 Eigen::Vector3d CalculateCameraCenter(Eigen::Matrix<double, 3, 4> const& P) {
     double const x{P(Eigen::all, {1, 2, 3}).determinant()};
     double const y{-P(Eigen::all, {0, 2, 3}).determinant()};

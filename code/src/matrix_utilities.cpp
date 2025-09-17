@@ -18,6 +18,8 @@ std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> NormalizeColumnWise(Eigen::MatrixXd
     Eigen::Index const n{matrix.cols()};
     double const scale{std::sqrt(n) / mean_magnitude};
 
+    // TODO(Jack): Where is the source or link for this code? If it exists please link it because this is hard to
+    // understand in the future.
     Eigen::MatrixXd Tf{Eigen::MatrixXd::Identity(n + 1, n + 1)};
     Tf.topRightCorner(n, 1) = -scale * center;
     Tf.diagonal().topRows(n) *= scale;
@@ -26,10 +28,6 @@ std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> NormalizeColumnWise(Eigen::MatrixXd
     // be consistent regardless :)
     Eigen::MatrixXd const normalized_matrix{(Tf * (matrix.rowwise().homogeneous()).transpose()).transpose()};
 
-    // TODO(Jack): We need to decide on a consistent posture for how we accept/treat homogeneous coordinates. At this
-    // point we are only using homogenous coordinates at points in the math where it helps, but we do not store and
-    // matrices directly as homogenous. Here we take only n left cols so we do no return homogenous points from the
-    // previous calculation
     return {normalized_matrix.leftCols(n), Tf};
 }
 

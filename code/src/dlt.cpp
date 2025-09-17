@@ -10,13 +10,12 @@ namespace reprojection_calibration::pnp {
 // NOTE(Jack): We probably mainly want only the pose, but we calculate K anyway as part of the process, so following the
 // "law of useful return", we return K too.
 std::tuple<Eigen::Isometry3d, Eigen::Matrix3d> Dlt(Eigen::MatrixX2d const& pixels, Eigen::MatrixX3d const& points) {
-    // Normalize
     auto const [normalized_pixels, tf_pixels]{NormalizeColumnWise(pixels)};
     auto const [normalized_points, tf_points]{NormalizeColumnWise(points)};
 
     Eigen::Matrix<double, Eigen::Dynamic, 12> const A{ConstructA(normalized_pixels, normalized_points)};
     Eigen::Matrix<double, 3, 4> const P{SolveForP(A)};
-    Eigen::Matrix<double, 3, 4> const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize)
+    Eigen::Matrix<double, 3, 4> const P_star{tf_pixels.inverse() * P * tf_points};  //  Denormalize
 
     // Extract camera parameters
     auto [K, R]{DecomposeMIntoKr(P_star.leftCols(3))};
