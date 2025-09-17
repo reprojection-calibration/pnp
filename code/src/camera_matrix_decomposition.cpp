@@ -25,17 +25,15 @@ std::tuple<Eigen::Matrix3d, Eigen::Matrix3d> DecomposeMIntoKr(Eigen::Matrix3d co
     const auto [K, R]{RqDecomposition(M)};
 
     // TODO(Jack): Fix hacky sign names here - what we are doing here is to make sure that the matrix K has all positive
-    // diagonal values. See the referenced link for more details.
-    Eigen::Vector3d const signage{K.diagonal().array().sign()};
-    Eigen::Matrix3d sign_mat{Eigen::Matrix3d::Identity()};
-    sign_mat.diagonal() = signage;
+    // diagonal values. See the referenced link (https://ksimek.github.io/2012/08/14/decompose/) for more details.
+    Eigen::Vector3d const sign{K.diagonal().array().sign()};
+    Eigen::Matrix3d const sign_mat{sign.asDiagonal()};
 
-    Eigen::Matrix3d K_star{K * sign_mat};
-    K_star = K_star.array() / K_star(2, 2);
-    Eigen::Matrix3d const R_star{sign_mat * R};
+    Eigen::Matrix3d const K_star{sign_mat * (K / std::abs(K(2, 2)))};
 
+    Eigen::Matrix3d R_star{sign_mat * R};
     if (R_star.determinant() < 0) {
-        return {K_star, -1.0 * R_star};
+        R_star *= -1;
     }
 
     return {K_star, R_star};
